@@ -1271,28 +1271,69 @@ window.saveCheckin=async()=>{
   }catch(e){ _toast('Gagal: '+e.code,'error'); }
 };
 async function loadCheckinHistory(cid){
-  const el=document.getElementById('checkin-history'); el.innerHTML='';
+  const el=document.getElementById('checkin-history');
+  el.innerHTML='';
   try{
-    const q=query(collection(db,'checkins'),where('child','==',cid),where('familyCode','==',CU.profile.familyCode),orderBy('date','desc'));
+    const q=query(collection(db,'checkins'),
+      where('child','==',cid),
+      where('familyCode','==',CU.profile.familyCode),
+      orderBy('date','desc'));
     const snap=await getDocs(q);
-    if(snap.empty){ el.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Belum ada check-in. Tap "+ Check-in" untuk mulai.</div></div>'; return; }
+    if(snap.empty){
+      el.innerHTML='<div class=\"empty-state\"><div class=\"empty-icon\">📋</div><div class=\"empty-text\">Belum ada check-in.</div></div>';
+      return;
+    }
     const dimC={sp:'badge-gold',ak:'badge-sky',fi:'badge-teal',em:'badge-rose',ko:'badge-purple'};
     const dimN={sp:'Spiritual',ak:'Akademik',fi:'Fisik',em:'Emosi',ko:'Komunikasi'};
-    snap.forEach(d=>{
-      const data=d.data(); const r=data.ratings;
-      const div=document.createElement('div'); div.className='history-item';
-      div.innerHTML='<div class="history-week-lbl"><span>'+data.week+' · '+data.by+'</span><span onclick="deleteCheckin(''+d.id+'',''+cid+'')" class="del-btn">Hapus</span></div>'
-        +'<div class="history-dims">'+Object.entries(r).map(([k,v])=>'<span class="history-dim '+dimC[k]+'">'+dimN[k]+' '+v+'/5</span>').join('')+'</div>'
-        +(data.note?'<div class="history-note">📝 '+data.note+'</div>':'')
-        +(data.plan?'<div class="history-note" style="margin-top:4px">📌 '+data.plan+'</div>':'');
+    snap.forEach(function(d){
+      const data=d.data();
+      const r=data.ratings;
+      const div=document.createElement('div');
+      div.className='history-item';
+      const wlbl=document.createElement('div');
+      wlbl.className='history-week-lbl';
+      const sp1=document.createElement('span');
+      sp1.textContent=data.week+' · '+data.by;
+      const sp2=document.createElement('span');
+      sp2.className='del-btn';
+      sp2.textContent='Hapus';
+      sp2.onclick=function(){ deleteCheckinById(d.id,cid); };
+      wlbl.appendChild(sp1); wlbl.appendChild(sp2);
+      div.appendChild(wlbl);
+      const dimDiv=document.createElement('div');
+      dimDiv.className='history-dims';
+      Object.entries(r).forEach(function(e){
+        const sp=document.createElement('span');
+        sp.className='history-dim '+(dimC[e[0]]||'');
+        sp.textContent=(dimN[e[0]]||e[0])+' '+e[1]+'/5';
+        dimDiv.appendChild(sp);
+      });
+      div.appendChild(dimDiv);
+      if(data.note){ const nd=document.createElement('div'); nd.className='history-note'; nd.textContent='📝 '+data.note; div.appendChild(nd); }
+      if(data.plan){ const pd=document.createElement('div'); pd.className='history-note'; pd.style.marginTop='4px'; pd.textContent='📌 '+data.plan; div.appendChild(pd); }
       el.appendChild(div);
     });
-  }catch(e){ el.innerHTML='<div class="empty-state"><div class="empty-text">Gagal memuat.</div></div>'; }
+  }catch(e){
+    el.innerHTML='<div class=\"empty-state\"><div class=\"empty-text\">Gagal memuat.</div></div>';
+    console.error(e);
+  }
 }
-window.deleteCheckin=async(docId,cid)=>{
+async function deleteCheckinById(docId,cid){
   if(!confirm('Hapus check-in ini?')) return;
   try{ await deleteDoc(doc(db,'checkins',docId)); _toast('Dihapus','success'); loadCheckinHistory(cid); renderHome(); updateLaporan(); }
   catch(e){ _toast('Gagal hapus','error'); }
+}
+window.deleteCheckin=async function(el){
+  const docId=el.dataset.id;
+  const cid=el.dataset.cid;
+  if(!confirm('Hapus check-in ini?')) return;
+  try{
+    await deleteDoc(doc(db,'checkins',docId));
+    _toast('Dihapus','success');
+    loadCheckinHistory(cid);
+    renderHome();
+    updateLaporan();
+  }catch(e){ _toast('Gagal hapus','error'); }
 };
 // ========== COMM LOG ==========
 window.openCommModal=()=>{
@@ -1316,32 +1357,48 @@ window.saveComm=async()=>{
   }catch(e){ _toast('Gagal: '+e.code,'error'); }
 };
 async function loadCommLog(cid){
-  const el=document.getElementById('comm-log-list'); el.innerHTML='';
+  const el=document.getElementById('comm-log-list');
+  el.innerHTML='';
   try{
-    const q=query(collection(db,'commlogs'),where('child','==',cid),where('familyCode','==',CU.profile.familyCode),orderBy('date','desc'));
+    const q=query(collection(db,'commlogs'),
+      where('child','==',cid),
+      where('familyCode','==',CU.profile.familyCode),
+      orderBy('date','desc'));
     const snap=await getDocs(q);
-    if(snap.empty){ el.innerHTML='<div class="empty-state"><div class="empty-icon">📞</div><div class="empty-text">Belum ada log komunikasi.</div></div>'; return; }
+    if(snap.empty){
+      el.innerHTML='<div class="empty-state"><div class="empty-icon">📞</div><div class="empty-text">Belum ada log komunikasi.</div></div>';
+      return;
+    }
     const kC={baik:'badge-teal',sedang:'badge-gold',perlu:'badge-rose'};
     const kL={baik:'😊 Baik',sedang:'😐 Sedang',perlu:'😟 Perlu Perhatian'};
-    snap.forEach(d=>{
+    snap.forEach(function(d){
       const data=d.data();
-      const div=document.createElement('div'); div.className='log-item';
-      div.innerHTML='<div class="log-item-hdr"><span class="log-date">📅 '+data.tanggal+'</span><span class="badge '+kC[data.kondisi]+'">'+kL[data.kondisi]+'</span></div>'
-        +'<div class="log-topic">'+data.topik+'</div>'
-        +(data.note?'<div class="log-note">'+data.note+'</div>':'')
-        +(data.followup?'<div class="log-fu">'+data.followup+'</div>':'')
-        +'<div class="log-actions"><span class="del-btn" onclick="deleteComm(''+d.id+'',''+cid+'')">Hapus</span></div>'
-        +'<div class="log-by">Dicatat oleh '+data.by+'</div>';
+      const div=document.createElement('div');
+      div.className='log-item';
+      const hdr=document.createElement('div'); hdr.className='log-item-hdr';
+      const dateSpan=document.createElement('span'); dateSpan.className='log-date'; dateSpan.textContent='📅 '+data.tanggal;
+      const badgeSpan=document.createElement('span'); badgeSpan.className='badge '+(kC[data.kondisi]||''); badgeSpan.textContent=kL[data.kondisi]||data.kondisi;
+      hdr.appendChild(dateSpan); hdr.appendChild(badgeSpan); div.appendChild(hdr);
+      const topic=document.createElement('div'); topic.className='log-topic'; topic.textContent=data.topik; div.appendChild(topic);
+      if(data.note){ const nd=document.createElement('div'); nd.className='log-note'; nd.textContent=data.note; div.appendChild(nd); }
+      if(data.followup){ const fd=document.createElement('div'); fd.className='log-fu'; fd.textContent=data.followup; div.appendChild(fd); }
+      const acts=document.createElement('div'); acts.className='log-actions';
+      const delBtn=document.createElement('span'); delBtn.className='del-btn'; delBtn.textContent='Hapus';
+      delBtn.onclick=function(){ deleteCommById(d.id,cid); }; acts.appendChild(delBtn); div.appendChild(acts);
+      const by=document.createElement('div'); by.className='log-by'; by.textContent='Dicatat oleh '+data.by; div.appendChild(by);
       el.appendChild(div);
     });
-  }catch(e){ el.innerHTML='<div class="empty-state"><div class="empty-text">Gagal memuat.</div></div>'; }
+  }catch(e){
+    el.innerHTML='<div class="empty-state"><div class="empty-text">Gagal memuat.</div></div>';
+    console.error(e);
+  }
 }
-window.deleteComm=async(docId,cid)=>{
+window.deleteComm=async function(el){};
+async function deleteCommById(docId,cid){
   if(!confirm('Hapus log ini?')) return;
   try{ await deleteDoc(doc(db,'commlogs',docId)); _toast('Dihapus','success'); loadCommLog(cid); updateLaporan(); }
   catch(e){ _toast('Gagal hapus','error'); }
-};
-// ========== MALAM REVIEW ==========
+}
 window.pickChip=(el,group)=>{ el.closest('.chip-group').querySelectorAll('.chip').forEach(c2=>c2.classList.remove('selected')); el.classList.add('selected'); };
 window.saveMalamReview=async()=>{
   if(!CU) return;
@@ -1356,26 +1413,42 @@ window.saveMalamReview=async()=>{
 };
 async function loadMalamList(){
   if(!CU) return;
-  const el=document.getElementById('malam-list'); el.innerHTML='';
+  const el=document.getElementById('malam-list');
+  el.innerHTML='';
   try{
-    const q=query(collection(db,'malamreviews'),where('familyCode','==',CU.profile.familyCode),orderBy('date','desc'));
+    const q=query(collection(db,'malamreviews'),
+      where('familyCode','==',CU.profile.familyCode),
+      orderBy('date','desc'));
     const snap=await getDocs(q);
-    if(snap.empty){ el.innerHTML='<div class="empty-state"><div class="empty-icon">🌙</div><div class="empty-text">Belum ada review malam.</div></div>'; return; }
-    snap.forEach(d=>{
-      const data=d.data(); const dt=new Date(data.date);
-      const div=document.createElement('div'); div.className='history-item';
-      div.innerHTML='<div class="history-week-lbl"><span>'+dt.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long'})+' · '+data.by+'</span><span onclick="deleteMalam(''+d.id+'')" class="del-btn">Hapus</span></div>'
-        +(data.note?'<div class="history-note">'+data.note+'</div>':'<div style="font-size:12px;color:var(--text-dim)">Tidak ada catatan</div>');
+    if(snap.empty){
+      el.innerHTML='<div class="empty-state"><div class="empty-icon">🌙</div><div class="empty-text">Belum ada review malam.</div></div>';
+      return;
+    }
+    snap.forEach(function(d){
+      const data=d.data();
+      const dt=new Date(data.date);
+      const div=document.createElement('div');
+      div.className='history-item';
+      const hdr=document.createElement('div'); hdr.className='history-week-lbl';
+      const s1=document.createElement('span');
+      s1.textContent=dt.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long'})+' · '+data.by;
+      const s2=document.createElement('span'); s2.className='del-btn'; s2.textContent='Hapus';
+      s2.onclick=function(){ deleteMalamById(d.id); };
+      hdr.appendChild(s1); hdr.appendChild(s2); div.appendChild(hdr);
+      const nd=document.createElement('div');
+      if(data.note){ nd.className='history-note'; nd.textContent=data.note; }
+      else{ nd.style.cssText='font-size:12px;color:var(--text-dim)'; nd.textContent='Tidak ada catatan'; }
+      div.appendChild(nd);
       el.appendChild(div);
     });
-  }catch(e){}
+  }catch(e){ console.error(e); }
 }
-window.deleteMalam=async(docId)=>{
+window.deleteMalam=async function(){};
+async function deleteMalamById(docId){
   if(!confirm('Hapus review ini?')) return;
   try{ await deleteDoc(doc(db,'malamreviews',docId)); _toast('Dihapus','success'); loadMalamList(); }
   catch(e){ _toast('Gagal hapus','error'); }
-};
-// ========== LAPORAN ==========
+}
 async function updateLaporan(){
   if(!CU) return;
   try{
