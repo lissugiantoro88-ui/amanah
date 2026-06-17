@@ -1195,4 +1195,246 @@ window.deleteRoadmapItem=async(itemId,cid,phaseId)=>{
   toast('Item dihapus','success');
 };
 
-// ========== EDIT CHILD MODAL ====
+// ========== EDIT CHILD MODAL ==========
+window.openEditChildModal=()=>{
+  if(!CK) return;
+  const c2=childrenData[CK];
+  document.getElementById('edit-child-title').textContent='Edit '+c2.name;
+  document.getElementById('ec-vision').value=c2.vision;
+  const sel=document.getElementById('ec-phase');
+  sel.innerHTML=c2.phases.map(p=>'<option value="'+p.id+'">'+p.title+'</option>').join('');
+  _openModal('modal-edit-child');
+};
+window.saveChildVision=async()=>{
+  if(!CK) return;
+  const v=document.getElementById('ec-vision').value.trim();
+  if(v) childrenData[CK].vision=v;
+  document.getElementById('ch-vision').textContent=childrenData[CK].vision;
+  await saveCustomData();
+  _closeModal('modal-edit-child');
+  _toast('Visi disimpan','success');
+};
+window.addRoadmapItem=async()=>{
+  if(!CK) return;
+  const label=document.getElementById('ec-new-item').value.trim();
+  const dim=document.getElementById('ec-dim').value;
+  const phaseId=document.getElementById('ec-phase').value;
+  const desc=document.getElementById('ec-desc').value.trim();
+  if(!label) return _toast('Isi nama item','error');
+  const phase=childrenData[CK].phases.find(p=>p.id===phaseId);
+  if(!phase) return;
+  phase.items.push({id:'x'+Date.now(),label,dim,desc:desc||label});
+  await saveCustomData();
+  document.getElementById('ec-new-item').value='';
+  document.getElementById('ec-desc').value='';
+  renderRoadmap(CK);
+  _toast('Item ditambahkan','success');
+};
+// ========== CHECKIN ==========
+function initStars(){
+  ratings={sp:0,ak:0,fi:0,em:0,ko:0};
+  ['sp','ak','fi','em','ko'].forEach(dim=>{
+    const cont=document.getElementById('st-'+dim); cont.innerHTML='';
+    for(let i=1;i<=5;i++){
+      const s=document.createElement('div');
+      s.className='star'; s.textContent='★'; s.dataset.v=i;
+      s.onclick=()=>_setStar(dim,i); cont.appendChild(s);
+    }
+    document.getElementById('rv-'+dim).textContent='-';
+  });
+}
+function _setStar(dim,val){
+  ratings[dim]=val;
+  document.getElementById('rv-'+dim).textContent=val;
+  document.getElementById('st-'+dim).querySelectorAll('.star').forEach(s=>{ s.classList.toggle('lit',parseInt(s.dataset.v)<=val); s.style.color=parseInt(s.dataset.v)<=val?'var(--gold)':'var(--text-dim)'; });
+}
+window.setStar=(dim,val)=>_setStar(dim,val);
+window.openCheckinModal=()=>{
+  if(CK) document.getElementById('ci-child').value=CK;
+  document.getElementById('ci-week').textContent='Minggu: '+getWeekLabel();
+  initStars();
+  document.getElementById('ci-note').value='';
+  document.getElementById('ci-plan').value='';
+  _openModal('modal-checkin');
+};
+window.saveCheckin=async()=>{
+  if(!CU) return;
+  const child=document.getElementById('ci-child').value;
+  if(Object.values(ratings).some(v=>v===0)) return _toast('Isi semua rating','error');
+  const data={child,week:getWeekLabel(),date:new Date().toISOString(),ratings:{...ratings},note:document.getElementById('ci-note').value,plan:document.getElementById('ci-plan').value,by:CU.profile.name,familyCode:CU.profile.familyCode};
+  try{
+    await addDoc(collection(db,'checkins'),data);
+    _closeModal('modal-checkin');
+    _toast('Check-in tersimpan','success');
+    if(CK===child) loadCheckinHistory(child);
+    renderHome(); updateLaporan();
+  }catch(e){ _toast('Gagal: '+e.code,'error'); }
+};
+async function loadCheckinHistory(cid){
+  const el=document.getElementById('checkin-history'); el.innerHTML='';
+  try{
+    const q=query(collection(db,'checkins'),where('child','==',cid),where('familyCode','==',CU.profile.familyCode),orderBy('date','desc'));
+    const snap=await getDocs(q);
+    if(snap.empty){ el.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Belum ada check-in. Tap "+ Check-in" untuk mulai.</div></div>'; return; }
+    const dimC={sp:'badge-gold',ak:'badge-sky',fi:'badge-teal',em:'badge-rose',ko:'badge-purple'};
+    const dimN={sp:'Spiritual',ak:'Akademik',fi:'Fisik',em:'Emosi',ko:'Komunikasi'};
+    snap.forEach(d=>{
+      const data=d.data(); const r=data.ratings;
+      const div=document.createElement('div'); div.className='history-item';
+      div.innerHTML='<div class="history-week-lbl"><span>'+data.week+' · '+data.by+'</span><span onclick="deleteCheckin(''+d.id+'',''+cid+'')" class="del-btn">Hapus</span></div>'
+        +'<div class="history-dims">'+Object.entries(r).map(([k,v])=>'<span class="history-dim '+dimC[k]+'">'+dimN[k]+' '+v+'/5</span>').join('')+'</div>'
+        +(data.note?'<div class="history-note">📝 '+data.note+'</div>':'')
+        +(data.plan?'<div class="history-note" style="margin-top:4px">📌 '+data.plan+'</div>':'');
+      el.appendChild(div);
+    });
+  }catch(e){ el.innerHTML='<div class="empty-state"><div class="empty-text">Gagal memuat.</div></div>'; }
+}
+window.deleteCheckin=async(docId,cid)=>{
+  if(!confirm('Hapus check-in ini?')) return;
+  try{ await deleteDoc(doc(db,'checkins',docId)); _toast('Dihapus','success'); loadCheckinHistory(cid); renderHome(); updateLaporan(); }
+  catch(e){ _toast('Gagal hapus','error'); }
+};
+// ========== COMM LOG ==========
+window.openCommModal=()=>{
+  if(CK&&childrenData[CK]&&childrenData[CK].hasComm) document.getElementById('comm-child').value=CK;
+  document.getElementById('comm-topik').value='';
+  document.getElementById('comm-note').value='';
+  document.getElementById('comm-fu').value='';
+  _openModal('modal-comm');
+};
+window.saveComm=async()=>{
+  if(!CU) return;
+  const topik=document.getElementById('comm-topik').value.trim();
+  if(!topik) return _toast('Isi topik yang dibahas','error');
+  const data={child:document.getElementById('comm-child').value,tanggal:document.getElementById('comm-date').value,kondisi:document.getElementById('comm-kondisi').value,topik,note:document.getElementById('comm-note').value,followup:document.getElementById('comm-fu').value,date:new Date().toISOString(),by:CU.profile.name,familyCode:CU.profile.familyCode};
+  try{
+    await addDoc(collection(db,'commlogs'),data);
+    _closeModal('modal-comm');
+    _toast('Log tersimpan','success');
+    if(CK&&CK===data.child) loadCommLog(CK);
+    updateLaporan();
+  }catch(e){ _toast('Gagal: '+e.code,'error'); }
+};
+async function loadCommLog(cid){
+  const el=document.getElementById('comm-log-list'); el.innerHTML='';
+  try{
+    const q=query(collection(db,'commlogs'),where('child','==',cid),where('familyCode','==',CU.profile.familyCode),orderBy('date','desc'));
+    const snap=await getDocs(q);
+    if(snap.empty){ el.innerHTML='<div class="empty-state"><div class="empty-icon">📞</div><div class="empty-text">Belum ada log komunikasi.</div></div>'; return; }
+    const kC={baik:'badge-teal',sedang:'badge-gold',perlu:'badge-rose'};
+    const kL={baik:'😊 Baik',sedang:'😐 Sedang',perlu:'😟 Perlu Perhatian'};
+    snap.forEach(d=>{
+      const data=d.data();
+      const div=document.createElement('div'); div.className='log-item';
+      div.innerHTML='<div class="log-item-hdr"><span class="log-date">📅 '+data.tanggal+'</span><span class="badge '+kC[data.kondisi]+'">'+kL[data.kondisi]+'</span></div>'
+        +'<div class="log-topic">'+data.topik+'</div>'
+        +(data.note?'<div class="log-note">'+data.note+'</div>':'')
+        +(data.followup?'<div class="log-fu">'+data.followup+'</div>':'')
+        +'<div class="log-actions"><span class="del-btn" onclick="deleteComm(''+d.id+'',''+cid+'')">Hapus</span></div>'
+        +'<div class="log-by">Dicatat oleh '+data.by+'</div>';
+      el.appendChild(div);
+    });
+  }catch(e){ el.innerHTML='<div class="empty-state"><div class="empty-text">Gagal memuat.</div></div>'; }
+}
+window.deleteComm=async(docId,cid)=>{
+  if(!confirm('Hapus log ini?')) return;
+  try{ await deleteDoc(doc(db,'commlogs',docId)); _toast('Dihapus','success'); loadCommLog(cid); updateLaporan(); }
+  catch(e){ _toast('Gagal hapus','error'); }
+};
+// ========== MALAM REVIEW ==========
+window.pickChip=(el,group)=>{ el.closest('.chip-group').querySelectorAll('.chip').forEach(c2=>c2.classList.remove('selected')); el.classList.add('selected'); };
+window.saveMalamReview=async()=>{
+  if(!CU) return;
+  const note=document.getElementById('malam-note').value.trim();
+  try{
+    await addDoc(collection(db,'malamreviews'),{date:new Date().toISOString(),note,by:CU.profile.name,familyCode:CU.profile.familyCode});
+    document.getElementById('malam-note').value='';
+    document.querySelectorAll('.chip').forEach(c2=>c2.classList.remove('selected'));
+    _toast('Review malam tersimpan','success');
+    loadMalamList();
+  }catch(e){ _toast('Gagal: '+e.code,'error'); }
+};
+async function loadMalamList(){
+  if(!CU) return;
+  const el=document.getElementById('malam-list'); el.innerHTML='';
+  try{
+    const q=query(collection(db,'malamreviews'),where('familyCode','==',CU.profile.familyCode),orderBy('date','desc'));
+    const snap=await getDocs(q);
+    if(snap.empty){ el.innerHTML='<div class="empty-state"><div class="empty-icon">🌙</div><div class="empty-text">Belum ada review malam.</div></div>'; return; }
+    snap.forEach(d=>{
+      const data=d.data(); const dt=new Date(data.date);
+      const div=document.createElement('div'); div.className='history-item';
+      div.innerHTML='<div class="history-week-lbl"><span>'+dt.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long'})+' · '+data.by+'</span><span onclick="deleteMalam(''+d.id+'')" class="del-btn">Hapus</span></div>'
+        +(data.note?'<div class="history-note">'+data.note+'</div>':'<div style="font-size:12px;color:var(--text-dim)">Tidak ada catatan</div>');
+      el.appendChild(div);
+    });
+  }catch(e){}
+}
+window.deleteMalam=async(docId)=>{
+  if(!confirm('Hapus review ini?')) return;
+  try{ await deleteDoc(doc(db,'malamreviews',docId)); _toast('Dihapus','success'); loadMalamList(); }
+  catch(e){ _toast('Gagal hapus','error'); }
+};
+// ========== LAPORAN ==========
+async function updateLaporan(){
+  if(!CU) return;
+  try{
+    const cq=query(collection(db,'checkins'),where('familyCode','==',CU.profile.familyCode));
+    const cs=await getDocs(cq); document.getElementById('s-checkin').textContent=cs.size;
+    const lq=query(collection(db,'commlogs'),where('familyCode','==',CU.profile.familyCode));
+    const ls=await getDocs(lq); document.getElementById('s-log').textContent=ls.size;
+    const ids=['f1','f2','f3']; const colors=['var(--gold)','var(--teal)','var(--sky)'];
+    ['fakhrur','faqih','fathan'].forEach((cid,idx)=>{
+      const all=childrenData[cid].phases.flatMap(p=>p.items);
+      const done=all.filter(i=>rmState[i.id]==='done').length;
+      const pct=all.length?Math.round(done/all.length*100):0;
+      document.getElementById('pp-'+ids[idx]).textContent=pct+'%';
+      const pb=document.getElementById('pf-'+ids[idx]);
+      if(pb){ pb.style.width=pct+'%'; pb.style.background=colors[idx]; }
+    });
+    const lcEl=document.getElementById('last-checkins'); lcEl.innerHTML='';
+    for(const cid of ['fakhrur','faqih','fathan']){
+      try{
+        const q=query(collection(db,'checkins'),where('child','==',cid),where('familyCode','==',CU.profile.familyCode),orderBy('date','desc'));
+        const snap=await getDocs(q);
+        if(!snap.empty){
+          const data=snap.docs[0].data(); const r=data.ratings;
+          const avg=(Object.values(r).reduce((a,b)=>a+b,0)/5).toFixed(1);
+          const div=document.createElement('div');
+          div.style.cssText='display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bg2)';
+          div.innerHTML='<div style="font-size:20px">'+childrenData[cid].emoji+'</div><div style="flex:1"><div style="font-size:13px;font-weight:700">'+childrenData[cid].name+'</div><div style="font-size:11px;color:var(--text-muted)">'+data.week+'</div></div><div style="font-size:16px;font-weight:800;color:var(--gold)">'+avg+'/5</div>';
+          lcEl.appendChild(div);
+        }
+      }catch(e){}
+    }
+    if(!lcEl.children.length) lcEl.innerHTML='<div class="empty-state"><div class="empty-text">Belum ada check-in.</div></div>';
+  }catch(e){}
+}
+// ========== MODAL ==========
+function _openModal(id){ document.getElementById(id).classList.add('open'); }
+function _closeModal(id){ document.getElementById(id).classList.remove('open'); }
+window.openModal=_openModal;
+window.closeModal=_closeModal;
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }));
+// ========== UTILS ==========
+function getWeekLabel(){
+  const now=new Date();
+  const start=new Date(now.getFullYear(),0,1);
+  const wk=Math.ceil(((now-start)/86400000+start.getDay()+1)/7);
+  const months=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+  return months[now.getMonth()]+' '+now.getFullYear()+' (Minggu '+wk+')';
+}
+function _toast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast '+(type||'')+' show';
+  setTimeout(()=>{ t.className='toast'; },2800);
+}
+window.toast=_toast;
+// ========== REGISTER FUNCTIONS TO PROXY ==========
+const _fnMap={doLogin,doRegister,doLogout,showLogin,showReg,demoLogin,showPage,openChild,switchTab,togglePhase,cycleItem};
+Object.keys(_fnMap).forEach(k=>{ window['_fn_'+k]=window[k]; });
+['openEditChildModal','saveChildVision','addRoadmapItem','setStar','openCheckinModal','saveCheckin','deleteCheckin','openCommModal','saveComm','deleteComm','pickChip','saveMalamReview','deleteMalam','openModal','closeModal','toast','deleteRoadmapItem'].forEach(k=>{ if(window[k]) window['_fn_'+k]=window[k]; });
+if(window._queue){ window._queue.forEach(item=>{ if(window['_fn_'+item[0]]) window['_fn_'+item[0]].apply(null,item[1]); }); window._queue=[]; }
+</script>
+</body>
+</html>
