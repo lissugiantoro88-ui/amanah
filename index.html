@@ -936,7 +936,7 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-setTimeout(()=>{ if(document.getElementById('loading').style.display!=='none'){ document.getElementById('loading').style.display='none'; document.getElementById('auth-screen').style.display='flex'; } },4000);
+setTimeout(()=>{ if(document.getElementById('loading').style.display!=='none'){ document.getElementById('loading').style.display='none'; document.getElementById('auth-screen').style.display='flex'; } },2000);
 
 function initUI(p) {
   const isAyah=p.role==='ayah';
