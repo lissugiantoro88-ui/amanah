@@ -633,7 +633,7 @@
 <body>
 
 <!-- LOADING -->
-<div class="loading" id="loading">
+<div class="loading" id="loading" style="display:flex">
   <div class="loading-logo">Amanah</div>
   <div class="loading-arabic">أمانة</div>
   <div class="loading-dots">
@@ -1334,7 +1334,27 @@ window.doLogin = async () => {
   if (!email || !pass) return showToast('Isi email dan password', 'error');
   showToast('Sedang masuk...', '');
   try {
-    await signInWithEmailAndPassword(auth, email, pass);
+    const result = await signInWithEmailAndPassword(auth, email, pass);
+    console.log('Login success:', result.user.email);
+    // Manually trigger app display in case onAuthStateChanged is slow
+    setTimeout(async () => {
+      if (auth.currentUser) {
+        const user = auth.currentUser;
+        currentUser = user;
+        let data = { name: 'Pengguna', role: 'ayah', familyCode: 'default' };
+        try {
+          const snap = await getDoc(doc(db, 'users', user.uid));
+          if (snap.exists()) data = snap.data();
+        } catch(e) { console.warn('Firestore:', e.code); }
+        currentUser.profile = data;
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        try { initApp(data); } catch(e) {}
+        try { loadRoadmapState(); } catch(e) {}
+        try { updateLaporan(); } catch(e) {}
+        showToast('Selamat datang, ' + data.name + '!', 'success');
+      }
+    }, 1000);
   } catch(e) {
     if (email === 'demo@amanah.app') {
       try {
@@ -1349,6 +1369,7 @@ window.doLogin = async () => {
         : e.code === 'auth/too-many-requests' ? 'Terlalu banyak percobaan, coba lagi nanti'
         : 'Error: ' + e.code;
       showToast(msg, 'error');
+      console.error('Login error:', e.code, e.message);
     }
   }
 };
@@ -1364,18 +1385,28 @@ window.doRegister = async () => {
   showToast('Mendaftarkan akun...', '');
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    const userData = { name, role, familyCode: family, email };
     try {
-      await setDoc(doc(db, 'users', cred.user.uid), { name, role, familyCode: family, email });
+      await setDoc(doc(db, 'users', cred.user.uid), userData);
     } catch(dbErr) {
       console.warn('Firestore error:', dbErr.code);
     }
-    showToast('Akun berhasil! Selamat datang di Amanah 🎉', 'success');
+    // Manually show app after register
+    currentUser = cred.user;
+    currentUser.profile = userData;
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    try { initApp(userData); } catch(e) {}
+    try { loadRoadmapState(); } catch(e) {}
+    try { updateLaporan(); } catch(e) {}
+    showToast('Selamat datang di Amanah, ' + name + '! 🎉', 'success');
   } catch(e) {
     const msg = e.code === 'auth/email-already-in-use' ? 'Email sudah terdaftar, silakan Login'
       : e.code === 'auth/weak-password' ? 'Password minimal 6 karakter'
       : e.code === 'auth/invalid-email' ? 'Format email tidak valid'
       : 'Error: ' + e.code;
     showToast(msg, 'error');
+    console.error('Register error:', e.code);
   }
 };
 
@@ -1386,17 +1417,32 @@ window.doLogout = async () => {
 
 // AUTH STATE
 onAuthStateChanged(auth, async (user) => {
-  document.getElementById('loading').style.display = 'none';
+  console.log('Auth state changed:', user ? user.email : 'null');
+  try {
+    document.getElementById('loading').style.display = 'none';
+  } catch(e) {}
+  
   if (user) {
     currentUser = user;
-    const snap = await getDoc(doc(db, 'users', user.uid));
-    const data = snap.exists() ? snap.data() : { name: 'Pengguna', role: 'ayah', familyCode: 'default' };
+    let data = { name: 'Pengguna', role: 'ayah', familyCode: 'default' };
+    try {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if (snap.exists()) data = snap.data();
+    } catch(e) {
+      console.warn('Firestore read error:', e.code);
+      // Still proceed with default data
+    }
     currentUser.profile = data;
+    
+    // Force show app
     document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('app').style.display = '';
-    initApp(data);
-    loadRoadmapState();
-    updateLaporan();
+    document.getElementById('app').style.display = 'block';
+    
+    try { initApp(data); } catch(e) { console.warn('initApp error:', e); }
+    try { loadRoadmapState(); } catch(e) { console.warn('roadmap error:', e); }
+    try { updateLaporan(); } catch(e) { console.warn('laporan error:', e); }
+    
+    console.log('App loaded successfully for:', data.name);
   } else {
     document.getElementById('auth-screen').style.display = 'flex';
     document.getElementById('app').style.display = 'none';
@@ -1735,10 +1781,14 @@ function showToast(msg, type = '') {
 
 window.showToast = showToast;
 
+// Loading timeout fallback only - auth state handles the rest
 setTimeout(() => {
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('auth-screen').style.display = 'flex';
-}, 1500);
+  const loading = document.getElementById('loading');
+  if (loading && loading.style.display !== 'none') {
+    loading.style.display = 'none';
+    document.getElementById('auth-screen').style.display = 'flex';
+  }
+}, 3000);
 </script>
 </body>
 </html>
