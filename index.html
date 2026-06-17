@@ -485,6 +485,15 @@ body {
   <div class="loading-sub">Dashboard Parenting Keluarga</div>
   <div class="loading-dots"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
 </div>
+<script>
+// Immediately hide loading if Firebase takes too long
+window._loadingTimer = setTimeout(function() {
+  var l = document.getElementById('loading');
+  var a = document.getElementById('auth-screen');
+  if (l) l.style.display = 'none';
+  if (a) a.style.display = 'flex';
+}, 1500);
+</script>
 
 <!-- AUTH -->
 <div id="auth-screen" style="display:none">
@@ -756,6 +765,45 @@ body {
 
 <div class="toast" id="toast"></div>
 
+<script>
+// Global shims - these proxy to module functions after they load
+var _queue = [];
+function _proxy(name) {
+  return function() {
+    var args = arguments;
+    if (window['_fn_'+name]) { window['_fn_'+name].apply(null, args); }
+    else { _queue.push([name, args]); }
+  };
+}
+window.doLogin = _proxy('doLogin');
+window.doRegister = _proxy('doRegister');
+window.doLogout = _proxy('doLogout');
+window.showLogin = _proxy('showLogin');
+window.showReg = _proxy('showReg');
+window.demoLogin = _proxy('demoLogin');
+window.showPage = _proxy('showPage');
+window.openChild = _proxy('openChild');
+window.switchTab = _proxy('switchTab');
+window.togglePhase = _proxy('togglePhase');
+window.cycleItem = _proxy('cycleItem');
+window.deleteRoadmapItem = _proxy('deleteRoadmapItem');
+window.openEditChildModal = _proxy('openEditChildModal');
+window.saveChildVision = _proxy('saveChildVision');
+window.addRoadmapItem = _proxy('addRoadmapItem');
+window.openCheckinModal = _proxy('openCheckinModal');
+window.saveCheckin = _proxy('saveCheckin');
+window.setStar = _proxy('setStar');
+window.openCommModal = _proxy('openCommModal');
+window.saveComm = _proxy('saveComm');
+window.deleteComm = _proxy('deleteComm');
+window.deleteCheckin = _proxy('deleteCheckin');
+window.pickChip = _proxy('pickChip');
+window.saveMalamReview = _proxy('saveMalamReview');
+window.deleteMalam = _proxy('deleteMalam');
+window.openModal = _proxy('openModal');
+window.closeModal = _proxy('closeModal');
+window.toast = _proxy('toast');
+</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -909,6 +957,7 @@ window.doLogout = async () => {
 };
 
 async function loadApp(user, profileOverride=null) {
+  if(window._loadingTimer) clearTimeout(window._loadingTimer);
   CU = user;
   let profile = profileOverride;
   if(!profile) {
@@ -936,7 +985,7 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-setTimeout(()=>{ if(document.getElementById('loading').style.display!=='none'){ document.getElementById('loading').style.display='none'; document.getElementById('auth-screen').style.display='flex'; } },2000);
+// Loading handled by inline script above
 
 function initUI(p) {
   const isAyah=p.role==='ayah';
