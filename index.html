@@ -1332,18 +1332,23 @@ window.doLogin = async () => {
   const email = document.getElementById('login-email').value.trim();
   const pass = document.getElementById('login-pass').value;
   if (!email || !pass) return showToast('Isi email dan password', 'error');
+  showToast('Sedang masuk...', '');
   try {
     await signInWithEmailAndPassword(auth, email, pass);
   } catch(e) {
-    // Try demo
     if (email === 'demo@amanah.app') {
       try {
         await createUserWithEmailAndPassword(auth, email, pass);
         const uid = auth.currentUser.uid;
         await setDoc(doc(db, 'users', uid), { name: 'Ayah Demo', role: 'ayah', familyCode: 'amanah-demo', email });
-      } catch(e2) { showToast('Email atau password salah', 'error'); }
+      } catch(e2) { showToast('Error: ' + e2.code, 'error'); }
     } else {
-      showToast('Email atau password salah', 'error');
+      const msg = e.code === 'auth/wrong-password' ? 'Password salah'
+        : e.code === 'auth/user-not-found' ? 'Email tidak terdaftar'
+        : e.code === 'auth/invalid-credential' ? 'Email atau password salah'
+        : e.code === 'auth/too-many-requests' ? 'Terlalu banyak percobaan, coba lagi nanti'
+        : 'Error: ' + e.code;
+      showToast(msg, 'error');
     }
   }
 };
@@ -1355,11 +1360,23 @@ window.doRegister = async () => {
   const email = document.getElementById('reg-email').value.trim();
   const pass = document.getElementById('reg-pass').value;
   if (!name||!family||!email||!pass) return showToast('Lengkapi semua field', 'error');
+  if (pass.length < 6) return showToast('Password minimal 6 karakter', 'error');
+  showToast('Mendaftarkan akun...', '');
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
-    await setDoc(doc(db, 'users', cred.user.uid), { name, role, familyCode: family, email });
-    showToast('Akun berhasil dibuat', 'success');
-  } catch(e) { showToast(e.message, 'error'); }
+    try {
+      await setDoc(doc(db, 'users', cred.user.uid), { name, role, familyCode: family, email });
+    } catch(dbErr) {
+      console.warn('Firestore error:', dbErr.code);
+    }
+    showToast('Akun berhasil! Selamat datang di Amanah 🎉', 'success');
+  } catch(e) {
+    const msg = e.code === 'auth/email-already-in-use' ? 'Email sudah terdaftar, silakan Login'
+      : e.code === 'auth/weak-password' ? 'Password minimal 6 karakter'
+      : e.code === 'auth/invalid-email' ? 'Format email tidak valid'
+      : 'Error: ' + e.code;
+    showToast(msg, 'error');
+  }
 };
 
 window.doLogout = async () => {
