@@ -322,7 +322,7 @@ window._lt = setTimeout(function(){
     <div class="auth-title">Daftar Akun</div>
     <div class="auth-sub">Satu kode keluarga untuk Ayah & Ibu</div>
     <div class="fg"><label>Nama</label><input type="text" id="reg-name" placeholder="Nama Anda"></div>
-    <div class="fg"><label>Peran</label><select id="reg-role"><option value="ayah">Ayah</option><option value="ibu">Ibu</option></select></div>
+    <div class="fg"><label>Peran</label><select id="reg-role"><option value="ayah">Ayah</option><option value="ibu">Ibu</option><option value="fakhrur">Anak - Fakhrur</option><option value="faqih">Anak - Faqih</option><option value="fathan">Anak - Fathan</option></select></div>
     <div class="fg"><label>Kode Keluarga</label><input type="text" id="reg-family" placeholder="Buat kode unik keluarga"></div>
     <div class="fg"><label>Email</label><input type="email" id="reg-email" placeholder="email@contoh.com"></div>
     <div class="fg"><label>Password</label><input type="password" id="reg-pass" placeholder="Minimal 6 karakter"></div>
@@ -977,6 +977,13 @@ async function initApp(user, profileOverride) {
   updateLaporan();
   // Save to family index
   try { await setDoc(doc(db,'users_family',user.uid), {uid:user.uid,...p}, {merge:true}); } catch(e){}
+  // If anak, auto-navigate to their own profile
+  if (!isParent) {
+    const myChildId = ['fakhrur','faqih','fathan'].includes(p.role) ? p.role : null;
+    if (myChildId) {
+      setTimeout(function(){ openChild(myChildId); }, 500);
+    }
+  }
   T('Selamat datang, ' + p.name + '!', 'success');
 }
 
@@ -987,14 +994,25 @@ onAuthStateChanged(auth, async function(user) {
 
 function setupUI(p) {
   const isA = p.role === 'ayah';
+  const isParent = p.role === 'ayah' || p.role === 'ibu';
   ge('tb-name').textContent = p.name;
   ge('tb-av').textContent = p.name.charAt(0).toUpperCase();
-  ge('tb-av').style.background = isA ? 'var(--gold-d)' : 'var(--rose-d)';
-  ge('tb-av').style.color = isA ? 'var(--gold)' : 'var(--rose)';
+  ge('tb-av').style.background = isA ? 'var(--gold-d)' : p.role==='ibu' ? 'var(--rose-d)' : 'var(--sky-d)';
+  ge('tb-av').style.color = isA ? 'var(--gold)' : p.role==='ibu' ? 'var(--rose)' : 'var(--sky)';
+
+  // Hide Tim & Saya nav for anak role
+  const navTim = document.querySelector('.nav-item[data-page="tim"]');
+  const navSaya = document.querySelector('.nav-item[data-page="saya"]');
+  if (navTim) navTim.style.display = isParent ? '' : 'none';
+  if (navSaya) navSaya.style.display = isParent ? '' : 'none';
+
+  // Also hide Tim & Saya pages access completely for anak
+  window._isParent = isParent;
   const days = ['Ahad','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
   const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
   const now = new Date();
-  ge('g-name').textContent = "Assalamu'alaikum, " + p.name + " 👋";
+  const roleLabel = p.role==='ayah'?'Ayah':p.role==='ibu'?'Ibu':'';
+  ge('g-name').textContent = "Assalamu'alaikum, " + (roleLabel?roleLabel+' ':'')+p.name + " 👋";
   ge('g-date').textContent = days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
   if (now.getDay() === 0) ge('sunday-alert').style.display = 'flex';
   ge('kn-date').value = now.toISOString().split('T')[0];
@@ -1021,9 +1039,15 @@ function showPage(page) {
   if (nav) nav.classList.add('active');
   if (page === 'anak' && !CK) openChild('fakhrur');
   if (page === 'laporan') updateLaporan();
-  if (page === 'tim') loadMusyawarahList();
+  if (page === 'tim') {
+    if (window._isParent === false) { T('Fitur ini hanya untuk Ayah & Ibu','error'); return; }
+    loadMusyawarahList();
+  }
   if (page === 'kalender') loadEventList();
-  if (page === 'saya') { renderSelfDims('ayah'); renderSelfDims('ibu'); loadSelfEvalHistory(); }
+  if (page === 'saya') {
+    if (window._isParent === false) { T('Fitur ini hanya untuk Ayah & Ibu','error'); return; }
+    renderSelfDims('ayah'); renderSelfDims('ibu'); loadSelfEvalHistory();
+  }
   if (page === 'quran') initQuranPage();
 }
 window.showPage = showPage;
@@ -1126,6 +1150,9 @@ async function saveRmState() {
 
 // ===== HOME =====
 function renderHome() {
+  // Hide Tim & Saya quick actions for anak
+  const qaMus = ge('qa-musyawarah');
+  if (qaMus) qaMus.style.display = window._isParent === false ? 'none' : '';
   const list = ge('children-list'); list.innerHTML = '';
   ['fakhrur','faqih','fathan'].forEach(function(cid) {
     const c = childrenData[cid];
@@ -1997,7 +2024,10 @@ document.addEventListener('DOMContentLoaded', function(){
   // Quick actions home
   ge('qa-checkin').addEventListener('click', function(){ openCheckinModal(null); });
   ge('qa-koneksi').addEventListener('click', function(){ openKoneksiModal(null); });
-  ge('qa-musyawarah').addEventListener('click', function(){ showPage('tim'); });
+  ge('qa-musyawarah').addEventListener('click', function(){
+    if (window._isParent === false) { T('Fitur ini hanya untuk Ayah & Ibu','error'); return; }
+    showPage('tim');
+  });
   ge('qa-laporan').addEventListener('click', function(){ showPage('laporan'); });
   // Child page buttons
   ge('btn-back-home').addEventListener('click', function(){ showPage('home'); });
