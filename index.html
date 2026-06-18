@@ -1093,6 +1093,17 @@ async function loadCustomData() {
         if (d[cid].age) childrenData[cid].age = d[cid].age;
         if (d[cid].birthYear) childrenData[cid].birthYear = d[cid].birthYear;
         if (d[cid].status) childrenData[cid].status = d[cid].status;
+
+        // Remove deleted default items first
+        const deletedIds = d[cid].deletedItems || [];
+        if (deletedIds.length > 0) {
+          childrenData[cid].phases.forEach(function(phase) {
+            phase.items = phase.items.filter(function(item) {
+              return !deletedIds.includes(item.id);
+            });
+          });
+        }
+
         if (d[cid].phases) {
           d[cid].phases.forEach(function(cp) {
             const ex = childrenData[cid].phases.find(function(p){ return p.id === cp.id; });
@@ -1105,6 +1116,7 @@ async function loadCustomData() {
                 if (!ex.items.find(function(i){ return i.id === item.id; })) ex.items.push(item);
               });
             } else {
+              // Custom phase not in default - add it
               childrenData[cid].phases.push(cp);
             }
           });
@@ -1120,19 +1132,25 @@ async function saveCustomData() {
   ['fakhrur','faqih','fathan'].forEach(function(cid) {
     const def = defaultChildren[cid];
     const cur = childrenData[cid];
+    // Track which default items have been deleted
+    const allDefIds = def.phases.flatMap(function(p){ return p.items.map(function(i){ return i.id; }); });
+    const allCurIds = cur.phases.flatMap(function(p){ return p.items.map(function(i){ return i.id; }); });
+    const deletedIds = allDefIds.filter(function(id){ return !allCurIds.includes(id); });
+
     d[cid] = {
       vision: cur.vision,
       name: cur.name,
       age: cur.age,
       birthYear: cur.birthYear || 0,
       status: cur.status,
+      deletedItems: deletedIds,
       phases: []
     };
     cur.phases.forEach(function(phase) {
       const defP = def.phases.find(function(p){ return p.id === phase.id; });
       const defIds = defP ? defP.items.map(function(i){ return i.id; }) : [];
       const extras = phase.items.filter(function(i){ return !defIds.includes(i.id); });
-      const changed = !defP || phase.title !== defP.title || phase.period !== defP.period || phase.status !== defP.status || extras.length > 0;
+      const changed = !defP || phase.title !== defP.title || phase.period !== defP.period || phase.status !== defP.status || extras.length > 0 || deletedIds.length > 0;
       if (changed) d[cid].phases.push({id:phase.id, title:phase.title, period:phase.period, theme:phase.theme, status:phase.status, extraItems:extras});
     });
   });
