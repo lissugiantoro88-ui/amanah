@@ -552,12 +552,120 @@ window._lt = setTimeout(function(){
     <div id="self-eval-history"></div>
   </div>
 
+
+  <!-- QURAN PAGE -->
+  <div id="page-quran" class="page">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div style="font-size:20px;font-weight:800">Tadarus Al-Quran</div>
+      <button class="btn btn-ghost btn-sm" id="btn-share-quran" style="width:auto;padding:8px 14px">&#128247; Bagikan</button>
+    </div>
+    <div style="font-family:'Amiri',serif;font-size:16px;color:var(--gold);direction:rtl;margin-bottom:4px;opacity:.8">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:18px">Perjalanan spiritual keluarga bersama Al-Quran</div>
+
+    <!-- Family Overview -->
+    <div id="quran-family-overview"></div>
+
+    <!-- Tabs -->
+    <div class="tabs" style="margin-top:8px">
+      <div class="tab active" data-qtab="log">&#128214; Log Harian</div>
+      <div class="tab" data-qtab="detail">&#128202; Detail Per Anggota</div>
+      <div class="tab" data-qtab="fathan">&#127775; Fathan</div>
+      <div class="tab" data-qtab="stats">&#127942; Pencapaian</div>
+    </div>
+
+    <div class="tab-panel active" id="qtp-log">
+      <div class="card">
+        <div class="card-title">&#128197; Catat Tilawah Hari Ini</div>
+        <div class="fg"><label>Anggota</label>
+          <select id="q-member">
+            <option value="ayah">Ayah</option>
+            <option value="ibu">Ibu</option>
+            <option value="fakhrur">Fakhrur</option>
+            <option value="faqih">Faqih</option>
+            <option value="fathan">Fathan</option>
+          </select>
+        </div>
+        <div class="fg"><label>Tanggal</label><input type="date" id="q-date"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="fg"><label>Halaman Dibaca (Tilawah)</label><input type="number" id="q-pages" min="0" max="600" placeholder="0"></div>
+          <div class="fg"><label>Ayat Hafalan Baru (Ziyadah)</label><input type="number" id="q-ziyadah" min="0" placeholder="0"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="fg"><label>Halaman Muroja'ah</label><input type="number" id="q-muroja" min="0" placeholder="0"></div>
+          <div class="fg"><label>Kualitas Bacaan</label>
+            <select id="q-quality">
+              <option value="lancar">&#128994; Lancar & Tartil</option>
+              <option value="baik">&#128309; Baik</option>
+              <option value="perlu">&#128308; Perlu Perbaikan</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg"><label>Posisi Tilawah Saat Ini</label>
+          <select id="q-surat" style="margin-bottom:8px">
+            <option value="">-- Pilih Surat --</option>
+          </select>
+          <input type="number" id="q-ayat" placeholder="Ayat ke-..." min="1" style="margin-top:6px">
+        </div>
+        <div class="fg"><label>Catatan</label><textarea id="q-note" placeholder="Kondisi bacaan, rasa, pengalaman hari ini..." style="min-height:60px"></textarea></div>
+        <button class="btn btn-primary" id="btn-save-quran-log">&#128336; Simpan Log Tilawah</button>
+      </div>
+      <div class="sec-label">Riwayat 30 Hari Terakhir</div>
+      <div id="quran-log-list"></div>
+    </div>
+
+    <div class="tab-panel" id="qtp-detail">
+      <div id="quran-member-detail"></div>
+    </div>
+
+    <div class="tab-panel" id="qtp-fathan">
+      <div id="fathan-mode-content"></div>
+    </div>
+
+    <div class="tab-panel" id="qtp-stats">
+      <div id="quran-achievements"></div>
+    </div>
+  </div>
+
+  <!-- QURAN PROFILE MODAL -->
+  <div class="modal-overlay" id="modal-quran-profile">
+    <div class="modal">
+      <div class="modal-hdr"><div class="modal-title" id="qp-title">Profil Quran</div><div class="modal-close" data-close="modal-quran-profile">x</div></div>
+      <div id="qp-member-name" style="font-size:15px;font-weight:800;color:var(--gold);margin-bottom:16px"></div>
+      <div class="fg"><label>Target Hafalan Total (Juz)</label><input type="number" id="qp-target-juz" min="1" max="30" placeholder="Contoh: 30"></div>
+      <div class="fg"><label>Hafalan Saat Ini (Juz penuh)</label><input type="number" id="qp-current-juz" min="0" max="30" placeholder="Contoh: 8"></div>
+      <div class="fg"><label>Surat Hafalan Terakhir</label><select id="qp-current-surat"><option value="">-- Pilih --</option></select></div>
+      <div class="fg"><label>Ayat Terakhir Dihafal</label><input type="number" id="qp-current-ayat" min="1" placeholder="Ayat ke-..."></div>
+      <div class="fg"><label>Target Harian Tilawah (halaman)</label><input type="number" id="qp-target-pages" min="1" max="20" placeholder="Contoh: 2"></div>
+      <div class="fg"><label>Target Tanggal Khatam Hafalan</label><input type="date" id="qp-target-date"></div>
+      <div class="fg"><label>Sudah Khatam Tilawah (kali)</label><input type="number" id="qp-khatam-count" min="0" placeholder="0"></div>
+      <div class="fg"><label>Catatan / Metode Hafalan</label><textarea id="qp-note" placeholder="Metode yang dipakai, kondisi hafalan, target khusus..." style="min-height:60px"></textarea></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close="modal-quran-profile">Batal</button>
+        <button class="btn btn-primary" id="btn-save-quran-profile">Simpan Profil</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QURAN SHARE MODAL -->
+  <div class="modal-overlay" id="modal-quran-share">
+    <div class="modal">
+      <div class="modal-hdr"><div class="modal-title">&#128247; Bagikan Progress</div><div class="modal-close" data-close="modal-quran-share">x</div></div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Preview kartu progress keluarga</div>
+      <div id="quran-share-card" style="background:linear-gradient(135deg,#1A2F1A,#2D4A2D);border-radius:16px;padding:24px;color:#fff;margin-bottom:16px">
+        <div id="share-card-content"></div>
+      </div>
+      <button class="btn btn-primary" id="btn-copy-share">Salin Teks untuk Dibagikan</button>
+    </div>
+  </div>
+
+
   <div class="bottom-nav">
     <div class="nav-item active" data-page="home"><div class="nav-icon">&#127968;</div><div>Beranda</div></div>
     <div class="nav-item" data-page="anak"><div class="nav-icon">&#128102;</div><div>Anak</div></div>
     <div class="nav-item" data-page="tim"><div class="nav-icon">&#128107;</div><div>Tim</div></div>
     <div class="nav-item" data-page="kalender"><div class="nav-icon">&#128197;</div><div>Kalender</div></div>
     <div class="nav-item" data-page="saya"><div class="nav-icon">&#129706;</div><div>Saya</div></div>
+    <div class="nav-item" data-page="quran"><div class="nav-icon">&#128218;</div><div>Quran</div></div>
     <div class="nav-item" data-page="laporan"><div class="nav-icon">&#128202;</div><div>Laporan</div></div>
   </div>
 </div>
@@ -609,8 +717,9 @@ window._lt = setTimeout(function(){
     <div class="modal-hdr"><div class="modal-title" id="edit-child-title">✏️ Edit Anak</div><div class="modal-close" data-close="modal-edit-child">✕</div></div>
         <div class="sec-label" style="margin-top:0">Profil Anak</div>
     <div class="fg"><label>Nama</label><input type="text" id="ec-name" placeholder="Nama anak"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div class="fg"><label>Usia</label><input type="text" id="ec-age" placeholder="Contoh: 15 tahun"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div class="fg"><label>Tahun Lahir</label><input type="number" id="ec-birthyear" placeholder="Contoh: 2010" min="2000" max="2030"></div>
+      <div class="fg"><label>Usia (tampil)</label><input type="text" id="ec-age" placeholder="Otomatis / custom"></div>
       <div class="fg"><label>Status / Sekolah</label><input type="text" id="ec-status" placeholder="Contoh: SMA Pondok Modern"></div>
     </div>
     <div class="sec-label">Visi & Target Besar</div>
@@ -694,7 +803,7 @@ let selfRatings = {ayah:{}, ibu:{}};
 // ===== DEFAULT DATA =====
 const defaultChildren = {
   fakhrur: {
-    name:'Fakhrur', age:'15 tahun', status:'SMA Pondok Modern',
+    name:'Fakhrur', age:'15 tahun', status:'SMA Pondok Modern', birthYear:2010,
     col:'cf', emoji:'🧑', hasKoneksi:true,
     vision:'Target: Masuk PTN Top Indonesia 2028 · Hafal 20 Juz · Akhlak matang · Siap hidup mandiri',
     phases:[
@@ -720,7 +829,7 @@ const defaultChildren = {
     ]
   },
   faqih: {
-    name:'Faqih', age:'11 tahun', status:'SD Kelas 5 - Persiapan Mondok',
+    name:'Faqih', age:'11 tahun', status:'SD Kelas 5 - Persiapan Mondok', birthYear:2014,
     col:'cq', emoji:'👦', hasKoneksi:false,
     vision:'Target: Masuk SMP Pondok Modern 2026 · Hafal 5 Juz · Mandiri & siap pisah dari orang tua',
     phases:[
@@ -740,7 +849,7 @@ const defaultChildren = {
     ]
   },
   fathan: {
-    name:'Fathan', age:'3 tahun', status:'Di Rumah - Golden Age',
+    name:'Fathan', age:'3 tahun', status:'Di Rumah - Golden Age', birthYear:2022,
     col:'ct', emoji:'👶', hasKoneksi:false,
     vision:'Target usia 7 tahun: Cinta Allah & Rasul tertanam · Literasi dasar kuat · Bonding kuat dengan Ayah & Ibu',
     phases:[
@@ -915,6 +1024,7 @@ function showPage(page) {
   if (page === 'tim') loadMusyawarahList();
   if (page === 'kalender') loadEventList();
   if (page === 'saya') { renderSelfDims('ayah'); renderSelfDims('ibu'); loadSelfEvalHistory(); }
+  if (page === 'quran') initQuranPage();
 }
 window.showPage = showPage;
 
@@ -923,10 +1033,12 @@ function openChild(cid) {
   const c = childrenData[cid];
   ge('ch-hero').className = 'child-hero';
   ge('ch-name').textContent = c.emoji + ' ' + c.name;
-  ge('ch-meta').textContent = c.age + ' - ' + c.status;
+  ge('ch-meta').textContent = getChildAgeDisplay(cid) + ' - ' + c.status;
   ge('ch-vision').textContent = c.vision;
-  ge('koneksi-tab').style.display = c.hasKoneksi ? '' : 'none';
-  ge('btn-koneksi-child').style.display = c.hasKoneksi ? '' : 'none';
+  // Show koneksi tab for pondok kids OR fathan if adult
+  const showKoneksi = c.hasKoneksi || (cid==='fathan' && getChildMode('fathan')==='adult');
+  ge('koneksi-tab').style.display = showKoneksi ? '' : 'none';
+  ge('btn-koneksi-child').style.display = showKoneksi ? '' : 'none';
   renderRoadmap(cid);
   loadCheckinHistory(cid);
   if (c.hasKoneksi) loadKoneksiLog(cid);
@@ -955,6 +1067,7 @@ async function loadCustomData() {
         if (d[cid].vision) childrenData[cid].vision = d[cid].vision;
         if (d[cid].name) childrenData[cid].name = d[cid].name;
         if (d[cid].age) childrenData[cid].age = d[cid].age;
+        if (d[cid].birthYear) childrenData[cid].birthYear = d[cid].birthYear;
         if (d[cid].status) childrenData[cid].status = d[cid].status;
         if (d[cid].phases) {
           d[cid].phases.forEach(function(cp) {
@@ -987,6 +1100,7 @@ async function saveCustomData() {
       vision: cur.vision,
       name: cur.name,
       age: cur.age,
+      birthYear: cur.birthYear || 0,
       status: cur.status,
       phases: []
     };
@@ -1021,7 +1135,7 @@ function renderHome() {
     const card = document.createElement('div');
     card.className = 'child-card ' + c.col;
     card.innerHTML = '<div class="child-top"><div class="child-av ' + c.col + '">' + c.emoji + '</div>'
-      + '<div style="flex:1"><div class="child-name">' + c.name + '</div><div class="child-meta">' + c.age + ' - ' + c.status + '</div></div>'
+      + '<div style="flex:1"><div class="child-name">' + c.name + '</div><div class="child-meta">' + getChildAgeDisplay(cid) + ' - ' + c.status + '</div></div>'
       + '<div class="badge badge-' + (cid==='fakhrur'?'gold':cid==='faqih'?'teal':'sky') + '">' + pct + '%</div></div>'
       + '<div class="dim-bars">'
       + ['sp','ak','fi','em','ko'].map(function(d,i){
@@ -1201,7 +1315,8 @@ function openEditChildModal() {
   const c = childrenData[CK];
   ge('edit-child-title').textContent = 'Edit ' + c.name;
   ge('ec-name').value = c.name;
-  ge('ec-age').value = c.age;
+  ge('ec-birthyear').value = c.birthYear || '';
+  ge('ec-age').value = c.birthYear ? (new Date().getFullYear() - c.birthYear) + ' tahun' : c.age;
   ge('ec-status').value = c.status;
   ge('ec-vision').value = c.vision;
   renderPhaseEditList(); updatePhaseSelect();
@@ -1236,16 +1351,22 @@ function updatePhaseSelect() {
 async function saveChildVision() {
   if (!CK) return;
   const name = ge('ec-name').value.trim();
+  const birthYear = parseInt(ge('ec-birthyear').value) || 0;
   const age = ge('ec-age').value.trim();
   const status = ge('ec-status').value.trim();
   const vision = ge('ec-vision').value.trim();
   if (name) childrenData[CK].name = name;
-  if (age) childrenData[CK].age = age;
+  if (birthYear) {
+    childrenData[CK].birthYear = birthYear;
+    childrenData[CK].age = (new Date().getFullYear() - birthYear) + ' tahun';
+  } else if (age) {
+    childrenData[CK].age = age;
+  }
   if (status) childrenData[CK].status = status;
   if (vision) childrenData[CK].vision = vision;
   // Update hero display
   ge('ch-name').textContent = childrenData[CK].emoji + ' ' + childrenData[CK].name;
-  ge('ch-meta').textContent = childrenData[CK].age + ' - ' + childrenData[CK].status;
+  ge('ch-meta').textContent = getChildAgeDisplay(CK) + ' - ' + childrenData[CK].status;
   ge('ch-vision').textContent = childrenData[CK].vision;
   // Update modal title
   ge('edit-child-title').textContent = 'Edit ' + childrenData[CK].name;
@@ -1335,7 +1456,19 @@ async function loadCheckinHistory(cid) {
 
 // ===== KONEKSI =====
 function openKoneksiModal(cid) {
-  if (cid && childrenData[cid] && childrenData[cid].hasKoneksi) ge('kn-child').value = cid;
+  // Populate kn-child dynamically based on age
+  const sel = ge('kn-child');
+  if (sel) {
+    sel.innerHTML = '';
+    ['fakhrur','faqih'].forEach(function(m) {
+      const o=document.createElement('option'); o.value=m; o.textContent=childrenData[m].name; sel.appendChild(o);
+    });
+    // Add fathan if age >= 13
+    if (getChildMode('fathan') === 'adult') {
+      const o=document.createElement('option'); o.value='fathan'; o.textContent=childrenData['fathan'].name; sel.appendChild(o);
+    }
+  }
+  if (cid && sel) { try{ sel.value=cid; }catch(e){} }
   ge('kn-topik').value=''; ge('kn-note').value=''; ge('kn-followup').value='';
   openModal('modal-koneksi');
 }
@@ -1810,6 +1943,32 @@ async function updateLaporan() {
 }
 
 // ===== UTILS =====
+function getChildAge(cid) {
+  const c2 = childrenData[cid];
+  if (c2.birthYear) {
+    return new Date().getFullYear() - c2.birthYear;
+  }
+  // Fallback: parse from age string
+  const match = (c2.age||'').match(/\d+/);
+  return match ? parseInt(match[0]) : 10;
+}
+
+function getChildMode(cid) {
+  const age = getChildAge(cid);
+  if (age < 5) return 'toddler';      // checklist surat & doa
+  if (age < 13) return 'child';       // checklist + mulai tilawah
+  return 'adult';                      // full mode
+}
+
+function getChildAgeDisplay(cid) {
+  const c2 = childrenData[cid];
+  if (c2.birthYear) {
+    const age = new Date().getFullYear() - c2.birthYear;
+    return age + ' tahun';
+  }
+  return c2.age || '';
+}
+
 function getWeekLabel(){
   const now=new Date(), start=new Date(now.getFullYear(),0,1);
   const wk=Math.ceil(((now-start)/86400000+start.getDay()+1)/7);
@@ -1871,7 +2030,724 @@ document.addEventListener('DOMContentLoaded', function(){
   ge('btn-add-dim-ayah').addEventListener('click', function(){ currentDimRole='ayah'; ge('new-dim-name').value=''; ge('new-dim-desc').value=''; ge('new-dim-icon').value=''; ge('modal-add-dim-title').textContent='+ Dimensi Ayah'; openModal('modal-add-dim'); });
   ge('btn-add-dim-ibu').addEventListener('click', function(){ currentDimRole='ibu'; ge('new-dim-name').value=''; ge('new-dim-desc').value=''; ge('new-dim-icon').value=''; ge('modal-add-dim-title').textContent='+ Dimensi Ibu'; openModal('modal-add-dim'); });
   ge('btn-save-dim').addEventListener('click', function(){ addSelfDim(currentDimRole); });
+
+  // Quran
+  var btnSaveQLog = ge('btn-save-quran-log');
+  if(btnSaveQLog) btnSaveQLog.addEventListener('click', saveQuranLog);
+  var btnSaveQP = ge('btn-save-quran-profile');
+  if(btnSaveQP) btnSaveQP.addEventListener('click', saveQuranProfile);
+  var btnShareQ = ge('btn-share-quran');
+  if(btnShareQ) btnShareQ.addEventListener('click', openShareModal);
+  var btnCopyShare = ge('btn-copy-share');
+  if(btnCopyShare) btnCopyShare.addEventListener('click', function(){ if(navigator.clipboard && window._shareText){ navigator.clipboard.writeText(window._shareText).then(function(){ T('Teks disalin!','success'); }); } else { T('Salin teks di atas',''); } });
+
+  // Quran tabs
+  document.querySelectorAll('.tab[data-qtab]').forEach(function(el){
+    el.addEventListener('click', function(){
+      var tid = this.dataset.qtab;
+      document.querySelectorAll('.tab[data-qtab]').forEach(function(t){ t.classList.remove('active'); });
+      document.querySelectorAll('.tab-panel[id^="qtp-"]').forEach(function(t){ t.classList.remove('active'); });
+      this.classList.add('active');
+      var panel = ge('qtp-'+tid); if(panel) panel.classList.add('active');
+      if(tid==='detail') renderQuranMemberDetail();
+      if(tid==='fathan') renderFathanPage();
+      if(tid==='stats') renderQuranAchievements();
+      if(tid==='log') loadQuranLogList();
+    });
+  });
+
+  // Set quran date default
+  var qDate = ge('q-date');
+  if(qDate) qDate.value = new Date().toISOString().split('T')[0];
 });
+
+
+// ========== QURAN DATA ==========
+const SURAT_DATA = [
+  {no:1,name:'Al-Fatihah',latin:'Al-Fatihah',ayat:7,juz:1,type:'Makkiyah'},
+  {no:2,name:'Al-Baqarah',latin:'Al-Baqarah',ayat:286,juz:1,type:'Madaniyah'},
+  {no:3,name:'Ali Imran',latin:"Ali 'Imran",ayat:200,juz:3,type:'Madaniyah'},
+  {no:4,name:'An-Nisa',latin:"An-Nisa'",ayat:176,juz:4,type:'Madaniyah'},
+  {no:5,name:'Al-Maidah',latin:'Al-Maidah',ayat:120,juz:6,type:'Madaniyah'},
+  {no:6,name:'Al-Anam',latin:"Al-An'am",ayat:165,juz:7,type:'Makkiyah'},
+  {no:7,name:"Al-A'raf",latin:"Al-A'raf",ayat:206,juz:8,type:'Makkiyah'},
+  {no:8,name:'Al-Anfal',latin:'Al-Anfal',ayat:75,juz:9,type:'Madaniyah'},
+  {no:9,name:'At-Taubah',latin:'At-Taubah',ayat:129,juz:10,type:'Madaniyah'},
+  {no:10,name:'Yunus',latin:'Yunus',ayat:109,juz:11,type:'Makkiyah'},
+  {no:11,name:'Hud',latin:'Hud',ayat:123,juz:11,type:'Makkiyah'},
+  {no:12,name:'Yusuf',latin:'Yusuf',ayat:111,juz:12,type:'Makkiyah'},
+  {no:13,name:"Ar-Ra'd",latin:"Ar-Ra'd",ayat:43,juz:13,type:'Madaniyah'},
+  {no:14,name:'Ibrahim',latin:'Ibrahim',ayat:52,juz:13,type:'Makkiyah'},
+  {no:15,name:'Al-Hijr',latin:'Al-Hijr',ayat:99,juz:14,type:'Makkiyah'},
+  {no:16,name:'An-Nahl',latin:'An-Nahl',ayat:128,juz:14,type:'Makkiyah'},
+  {no:17,name:'Al-Isra',latin:"Al-Isra'",ayat:111,juz:15,type:'Makkiyah'},
+  {no:18,name:'Al-Kahf',latin:'Al-Kahf',ayat:110,juz:15,type:'Makkiyah'},
+  {no:19,name:'Maryam',latin:'Maryam',ayat:98,juz:16,type:'Makkiyah'},
+  {no:20,name:'Ta-Ha',latin:'Ta-Ha',ayat:135,juz:16,type:'Makkiyah'},
+  {no:21,name:'Al-Anbiya',latin:"Al-Anbiya'",ayat:112,juz:17,type:'Makkiyah'},
+  {no:22,name:'Al-Hajj',latin:'Al-Hajj',ayat:78,juz:17,type:'Madaniyah'},
+  {no:23,name:'Al-Muminun',latin:"Al-Mu'minun",ayat:118,juz:18,type:'Makkiyah'},
+  {no:24,name:'An-Nur',latin:'An-Nur',ayat:64,juz:18,type:'Madaniyah'},
+  {no:25,name:'Al-Furqan',latin:'Al-Furqan',ayat:77,juz:18,type:'Makkiyah'},
+  {no:26,name:'Asy-Syuara',latin:"Asy-Syu'ara'",ayat:227,juz:19,type:'Makkiyah'},
+  {no:27,name:'An-Naml',latin:'An-Naml',ayat:93,juz:19,type:'Makkiyah'},
+  {no:28,name:'Al-Qasas',latin:'Al-Qasas',ayat:88,juz:20,type:'Makkiyah'},
+  {no:29,name:'Al-Ankabut',latin:"Al-'Ankabut",ayat:69,juz:20,type:'Makkiyah'},
+  {no:30,name:'Ar-Rum',latin:'Ar-Rum',ayat:60,juz:21,type:'Makkiyah'},
+  {no:31,name:'Luqman',latin:'Luqman',ayat:34,juz:21,type:'Makkiyah'},
+  {no:32,name:'As-Sajdah',latin:'As-Sajdah',ayat:30,juz:21,type:'Makkiyah'},
+  {no:33,name:'Al-Ahzab',latin:'Al-Ahzab',ayat:73,juz:21,type:'Madaniyah'},
+  {no:34,name:"Saba'",latin:"Saba'",ayat:54,juz:22,type:'Makkiyah'},
+  {no:35,name:'Fatir',latin:'Fatir',ayat:45,juz:22,type:'Makkiyah'},
+  {no:36,name:'Ya-Sin',latin:'Ya-Sin',ayat:83,juz:22,type:'Makkiyah'},
+  {no:37,name:'As-Saffat',latin:'As-Saffat',ayat:182,juz:23,type:'Makkiyah'},
+  {no:38,name:'Sad',latin:'Sad',ayat:88,juz:23,type:'Makkiyah'},
+  {no:39,name:'Az-Zumar',latin:'Az-Zumar',ayat:75,juz:23,type:'Makkiyah'},
+  {no:40,name:'Gafir',latin:'Gafir',ayat:85,juz:24,type:'Makkiyah'},
+  {no:41,name:'Fussilat',latin:'Fussilat',ayat:54,juz:24,type:'Makkiyah'},
+  {no:42,name:'Asy-Syura',latin:'Asy-Syura',ayat:53,juz:25,type:'Makkiyah'},
+  {no:43,name:'Az-Zukhruf',latin:'Az-Zukhruf',ayat:89,juz:25,type:'Makkiyah'},
+  {no:44,name:'Ad-Dukhan',latin:'Ad-Dukhan',ayat:59,juz:25,type:'Makkiyah'},
+  {no:45,name:'Al-Jasiyah',latin:'Al-Jasiyah',ayat:37,juz:25,type:'Makkiyah'},
+  {no:46,name:'Al-Ahqaf',latin:'Al-Ahqaf',ayat:35,juz:26,type:'Makkiyah'},
+  {no:47,name:'Muhammad',latin:'Muhammad',ayat:38,juz:26,type:'Madaniyah'},
+  {no:48,name:'Al-Fath',latin:'Al-Fath',ayat:29,juz:26,type:'Madaniyah'},
+  {no:49,name:'Al-Hujurat',latin:'Al-Hujurat',ayat:18,juz:26,type:'Madaniyah'},
+  {no:50,name:'Qaf',latin:'Qaf',ayat:45,juz:26,type:'Makkiyah'},
+  {no:51,name:'Az-Zariyat',latin:'Az-Zariyat',ayat:60,juz:26,type:'Makkiyah'},
+  {no:52,name:'At-Tur',latin:'At-Tur',ayat:49,juz:27,type:'Makkiyah'},
+  {no:53,name:'An-Najm',latin:'An-Najm',ayat:62,juz:27,type:'Makkiyah'},
+  {no:54,name:'Al-Qamar',latin:'Al-Qamar',ayat:55,juz:27,type:'Makkiyah'},
+  {no:55,name:'Ar-Rahman',latin:'Ar-Rahman',ayat:78,juz:27,type:'Madaniyah'},
+  {no:56,name:"Al-Waqi'ah",latin:"Al-Waqi'ah",ayat:96,juz:27,type:'Makkiyah'},
+  {no:57,name:'Al-Hadid',latin:'Al-Hadid',ayat:29,juz:27,type:'Madaniyah'},
+  {no:58,name:'Al-Mujadilah',latin:'Al-Mujadilah',ayat:22,juz:28,type:'Madaniyah'},
+  {no:59,name:'Al-Hasyr',latin:'Al-Hasyr',ayat:24,juz:28,type:'Madaniyah'},
+  {no:60,name:'Al-Mumtahanah',latin:'Al-Mumtahanah',ayat:13,juz:28,type:'Madaniyah'},
+  {no:61,name:'As-Saf',latin:'As-Saf',ayat:14,juz:28,type:'Madaniyah'},
+  {no:62,name:"Al-Jumu'ah",latin:"Al-Jumu'ah",ayat:11,juz:28,type:'Madaniyah'},
+  {no:63,name:'Al-Munafiqun',latin:'Al-Munafiqun',ayat:11,juz:28,type:'Madaniyah'},
+  {no:64,name:'At-Tagabun',latin:'At-Tagabun',ayat:18,juz:28,type:'Madaniyah'},
+  {no:65,name:'At-Talaq',latin:'At-Talaq',ayat:12,juz:28,type:'Madaniyah'},
+  {no:66,name:'At-Tahrim',latin:'At-Tahrim',ayat:12,juz:28,type:'Madaniyah'},
+  {no:67,name:'Al-Mulk',latin:'Al-Mulk',ayat:30,juz:29,type:'Makkiyah'},
+  {no:68,name:'Al-Qalam',latin:'Al-Qalam',ayat:52,juz:29,type:'Makkiyah'},
+  {no:69,name:'Al-Haqqah',latin:'Al-Haqqah',ayat:52,juz:29,type:'Makkiyah'},
+  {no:70,name:"Al-Ma'arij",latin:"Al-Ma'arij",ayat:44,juz:29,type:'Makkiyah'},
+  {no:71,name:'Nuh',latin:'Nuh',ayat:28,juz:29,type:'Makkiyah'},
+  {no:72,name:'Al-Jinn',latin:'Al-Jinn',ayat:28,juz:29,type:'Makkiyah'},
+  {no:73,name:'Al-Muzzammil',latin:'Al-Muzzammil',ayat:20,juz:29,type:'Makkiyah'},
+  {no:74,name:'Al-Muddassir',latin:'Al-Muddassir',ayat:56,juz:29,type:'Makkiyah'},
+  {no:75,name:'Al-Qiyamah',latin:'Al-Qiyamah',ayat:40,juz:29,type:'Makkiyah'},
+  {no:76,name:'Al-Insan',latin:'Al-Insan',ayat:31,juz:29,type:'Madaniyah'},
+  {no:77,name:'Al-Mursalat',latin:'Al-Mursalat',ayat:50,juz:29,type:'Makkiyah'},
+  {no:78,name:"An-Naba'",latin:"An-Naba'",ayat:40,juz:30,type:'Makkiyah'},
+  {no:79,name:"An-Nazi'at",latin:"An-Nazi'at",ayat:46,juz:30,type:'Makkiyah'},
+  {no:80,name:"'Abasa",latin:"'Abasa",ayat:42,juz:30,type:'Makkiyah'},
+  {no:81,name:'At-Takwir',latin:'At-Takwir',ayat:29,juz:30,type:'Makkiyah'},
+  {no:82,name:'Al-Infitar',latin:'Al-Infitar',ayat:19,juz:30,type:'Makkiyah'},
+  {no:83,name:'Al-Mutaffifin',latin:'Al-Mutaffifin',ayat:36,juz:30,type:'Makkiyah'},
+  {no:84,name:'Al-Insyiqaq',latin:'Al-Insyiqaq',ayat:25,juz:30,type:'Makkiyah'},
+  {no:85,name:'Al-Buruj',latin:'Al-Buruj',ayat:22,juz:30,type:'Makkiyah'},
+  {no:86,name:'At-Tariq',latin:'At-Tariq',ayat:17,juz:30,type:'Makkiyah'},
+  {no:87,name:"Al-A'la",latin:"Al-A'la",ayat:19,juz:30,type:'Makkiyah'},
+  {no:88,name:'Al-Gasyiyah',latin:'Al-Gasyiyah',ayat:26,juz:30,type:'Makkiyah'},
+  {no:89,name:'Al-Fajr',latin:'Al-Fajr',ayat:30,juz:30,type:'Makkiyah'},
+  {no:90,name:'Al-Balad',latin:'Al-Balad',ayat:20,juz:30,type:'Makkiyah'},
+  {no:91,name:'Asy-Syams',latin:'Asy-Syams',ayat:15,juz:30,type:'Makkiyah'},
+  {no:92,name:'Al-Lail',latin:'Al-Lail',ayat:21,juz:30,type:'Makkiyah'},
+  {no:93,name:'Ad-Duha',latin:'Ad-Duha',ayat:11,juz:30,type:'Makkiyah'},
+  {no:94,name:'Al-Insyirah',latin:'Al-Insyirah',ayat:8,juz:30,type:'Makkiyah'},
+  {no:95,name:'At-Tin',latin:'At-Tin',ayat:8,juz:30,type:'Makkiyah'},
+  {no:96,name:"Al-'Alaq",latin:"Al-'Alaq",ayat:19,juz:30,type:'Makkiyah'},
+  {no:97,name:'Al-Qadr',latin:'Al-Qadr',ayat:5,juz:30,type:'Makkiyah'},
+  {no:98,name:'Al-Bayyinah',latin:'Al-Bayyinah',ayat:8,juz:30,type:'Madaniyah'},
+  {no:99,name:'Az-Zalzalah',latin:'Az-Zalzalah',ayat:8,juz:30,type:'Madaniyah'},
+  {no:100,name:"Al-'Adiyat",latin:"Al-'Adiyat",ayat:11,juz:30,type:'Makkiyah'},
+  {no:101,name:"Al-Qari'ah",latin:"Al-Qari'ah",ayat:11,juz:30,type:'Makkiyah'},
+  {no:102,name:'At-Takasur',latin:'At-Takasur',ayat:8,juz:30,type:'Makkiyah'},
+  {no:103,name:'Al-Asr',latin:'Al-Asr',ayat:3,juz:30,type:'Makkiyah'},
+  {no:104,name:'Al-Humazah',latin:'Al-Humazah',ayat:9,juz:30,type:'Makkiyah'},
+  {no:105,name:'Al-Fil',latin:'Al-Fil',ayat:5,juz:30,type:'Makkiyah'},
+  {no:106,name:'Quraisy',latin:'Quraisy',ayat:4,juz:30,type:'Makkiyah'},
+  {no:107,name:"Al-Ma'un",latin:"Al-Ma'un",ayat:7,juz:30,type:'Makkiyah'},
+  {no:108,name:'Al-Kausar',latin:'Al-Kausar',ayat:3,juz:30,type:'Makkiyah'},
+  {no:109,name:'Al-Kafirun',latin:'Al-Kafirun',ayat:6,juz:30,type:'Makkiyah'},
+  {no:110,name:'An-Nasr',latin:'An-Nasr',ayat:3,juz:30,type:'Madaniyah'},
+  {no:111,name:'Al-Masad',latin:'Al-Masad',ayat:5,juz:30,type:'Makkiyah'},
+  {no:112,name:'Al-Ikhlas',latin:'Al-Ikhlas',ayat:4,juz:30,type:'Makkiyah'},
+  {no:113,name:'Al-Falaq',latin:'Al-Falaq',ayat:5,juz:30,type:'Makkiyah'},
+  {no:114,name:'An-Nas',latin:'An-Nas',ayat:6,juz:30,type:'Makkiyah'},
+];
+
+const FATHAN_SURAH = [114,113,112,111,110,109,108,107,106,105,104,103,102,101,100,99,98,97,96,95,94,93,92,91,90,89,88,87,86,85,84,83,82,81,80,79,78];
+const FATHAN_DOA = [
+  'Doa Makan','Doa Selesai Makan','Doa Sebelum Tidur','Doa Bangun Tidur',
+  'Doa Masuk Rumah','Doa Keluar Rumah','Doa Masuk Kamar Mandi','Doa Keluar Kamar Mandi',
+  'Doa Naik Kendaraan','Doa Bercermin','Doa Untuk Kedua Orang Tua','Doa Masuk Masjid'
+];
+
+// QURAN_MEMBERS computed dynamically based on age
+function getQuranMembers() {
+  const members = ['ayah','ibu','fakhrur','faqih'];
+  // Add fathan if age >= 5 (child mode shows tilawah too)
+  // Fathan always appears in Quran but with mode-based UI
+  members.push('fathan');
+  return members;
+}
+const QURAN_MEMBERS = ['ayah','ibu','fakhrur','faqih','fathan'];
+const MEMBER_LABELS = {ayah:'Ayah',ibu:'Ibu',fakhrur:'Fakhrur',faqih:'Faqih',fathan:'Fathan'};
+const MEMBER_EMOJI = {ayah:'👨',ibu:'👩',fakhrur:'🧑',faqih:'👦',fathan:'👶'};
+
+let quranProfiles = {};
+let fathanChecks = {surah:{}, doa:{}};
+let currentQMember = 'ayah';
+
+// ===== INIT QURAN =====
+async function initQuranPage() {
+  populateSuratSelects();
+  await loadQuranProfiles();
+  await loadFathanChecks();
+  renderQuranFamilyOverview();
+  renderQuranMemberDetail();
+  renderFathanPage();
+  renderQuranAchievements();
+  await loadQuranLogList();
+}
+
+function populateSuratSelects() {
+  ['q-surat','qp-current-surat'].forEach(function(id) {
+    const sel = document.getElementById(id); if(!sel) return;
+    sel.innerHTML = '<option value="">-- Pilih Surat --</option>';
+    SURAT_DATA.forEach(function(s) {
+      const o = document.createElement('option'); o.value = s.no;
+      o.textContent = s.no + '. ' + s.latin + ' (Juz ' + s.juz + ', ' + s.ayat + ' ayat)';
+      sel.appendChild(o);
+    });
+  });
+}
+
+// ===== PROFILES =====
+async function loadQuranProfiles() {
+  if (!CU) return;
+  try {
+    const s = await getDoc(doc(db,'quranprofiles',CU.profile.familyCode));
+    if (s.exists()) quranProfiles = s.data();
+  } catch(e) {}
+  QURAN_MEMBERS.forEach(function(m) {
+    if (!quranProfiles[m]) quranProfiles[m] = {
+      targetJuz:30, currentJuz:0, currentSurat:1, currentAyat:1,
+      targetPages:2, khatamCount:0, totalPages:0, streak:0,
+      lastReadDate:'', targetDate:'', note:''
+    };
+  });
+}
+
+async function saveQuranProfiles() {
+  if (!CU) return;
+  try { await setDoc(doc(db,'quranprofiles',CU.profile.familyCode), quranProfiles); } catch(e) {}
+}
+
+function openQuranProfileModal(member) {
+  currentQMember = member;
+  const p = quranProfiles[member] || {};
+  document.getElementById('qp-title').textContent = MEMBER_EMOJI[member] + ' Profil Quran ' + MEMBER_LABELS[member];
+  document.getElementById('qp-member-name').textContent = MEMBER_LABELS[member];
+  document.getElementById('qp-target-juz').value = p.targetJuz || 30;
+  document.getElementById('qp-current-juz').value = p.currentJuz || 0;
+  document.getElementById('qp-current-ayat').value = p.currentAyat || 1;
+  document.getElementById('qp-target-pages').value = p.targetPages || 2;
+  document.getElementById('qp-target-date').value = p.targetDate || '';
+  document.getElementById('qp-khatam-count').value = p.khatamCount || 0;
+  document.getElementById('qp-note').value = p.note || '';
+  const sel = document.getElementById('qp-current-surat');
+  if (sel) sel.value = p.currentSurat || 1;
+  openModal('modal-quran-profile');
+}
+window.openQuranProfileModal = openQuranProfileModal;
+
+async function saveQuranProfile() {
+  const m = currentQMember;
+  if (!quranProfiles[m]) quranProfiles[m] = {};
+  quranProfiles[m].targetJuz = parseInt(document.getElementById('qp-target-juz').value) || 30;
+  quranProfiles[m].currentJuz = parseInt(document.getElementById('qp-current-juz').value) || 0;
+  quranProfiles[m].currentSurat = parseInt(document.getElementById('qp-current-surat').value) || 1;
+  quranProfiles[m].currentAyat = parseInt(document.getElementById('qp-current-ayat').value) || 1;
+  quranProfiles[m].targetPages = parseInt(document.getElementById('qp-target-pages').value) || 2;
+  quranProfiles[m].targetDate = document.getElementById('qp-target-date').value;
+  quranProfiles[m].khatamCount = parseInt(document.getElementById('qp-khatam-count').value) || 0;
+  quranProfiles[m].note = document.getElementById('qp-note').value;
+  await saveQuranProfiles();
+  closeModal('modal-quran-profile');
+  renderQuranFamilyOverview();
+  renderQuranMemberDetail();
+  T('Profil Quran disimpan', 'success');
+}
+
+// ===== FAMILY OVERVIEW =====
+function renderQuranFamilyOverview() {
+  const el = document.getElementById('quran-family-overview'); if(!el) return;
+  el.innerHTML = '';
+  const today = new Date().toISOString().split('T')[0];
+  const fathanMode = getChildMode('fathan');
+
+  // Show fathan summary based on mode
+  if (fathanMode === 'toddler') {
+    // Toddler: show checklist summary only
+    const surahDone = Object.values(fathanChecks.surah||{}).filter(Boolean).length;
+    const doaDone = Object.values(fathanChecks.doa||{}).filter(Boolean).length;
+    const fc = document.createElement('div');
+    fc.style.cssText='background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;box-shadow:var(--sh)';
+    fc.innerHTML='<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">'
+      +'<div style="font-size:28px">👶</div>'
+      +'<div style="flex:1"><div style="font-size:15px;font-weight:800">Fathan</div>'
+      +'<div style="font-size:12px;color:var(--muted)">'+getChildAgeDisplay('fathan')+' - Mode Anak</div></div>'
+      +'<span style="font-size:10px;background:var(--sky-d);color:var(--sky);padding:3px 8px;border-radius:10px;font-weight:700">Toddler Mode</span>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      +'<div style="background:var(--gold-d);border-radius:var(--rx);padding:12px;text-align:center">'
+      +'<div style="font-size:22px;font-weight:800;color:var(--gold)">'+surahDone+'/'+FATHAN_SURAH.length+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);font-weight:700">Surat Hafal</div>'
+      +'<div style="height:4px;background:var(--bg2);border-radius:2px;margin-top:6px;overflow:hidden"><div style="height:100%;background:var(--gold);width:'+Math.round(surahDone/FATHAN_SURAH.length*100)+'%"></div></div>'
+      +'</div>'
+      +'<div style="background:var(--teal-d);border-radius:var(--rx);padding:12px;text-align:center">'
+      +'<div style="font-size:22px;font-weight:800;color:var(--teal)">'+doaDone+'/'+FATHAN_DOA.length+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);font-weight:700">Doa Hafal</div>'
+      +'<div style="height:4px;background:var(--bg2);border-radius:2px;margin-top:6px;overflow:hidden"><div style="height:100%;background:var(--teal);width:'+Math.round(doaDone/FATHAN_DOA.length*100)+'%"></div></div>'
+      +'</div></div>';
+    el.appendChild(fc);
+    // Then show adult members
+    ['ayah','ibu','fakhrur','faqih'].forEach(renderMemberCard);
+    return;
+  }
+
+  // Child or adult mode: show fathan with full tilawah card
+  QURAN_MEMBERS.forEach(function(m) {
+    if (m === 'fathan' && fathanMode === 'child') {
+      // Child mode: show both checklist summary + tilawah
+      renderMemberCard(m);
+      return;
+    }
+    renderMemberCard(m);
+  });
+  return;
+
+  function renderMemberCard(m) {
+    const p = quranProfiles[m] || {};
+    const surat = SURAT_DATA.find(function(s){ return s.no === (p.currentSurat||1); }) || SURAT_DATA[0];
+    const ageDisplay = m==='fathan' ? getChildAgeDisplay('fathan') : '';
+    const juzPct = p.targetJuz ? Math.round((p.currentJuz||0) / p.targetJuz * 100) : 0;
+    const totalHalPct = Math.round(((p.totalPages||0) % 600) / 600 * 100);
+    const isReadToday = p.lastReadDate === today;
+
+    // Days to khatam calculation
+    let daysToKhatam = '';
+    if (p.targetDate) {
+      const diff = Math.ceil((new Date(p.targetDate) - new Date()) / 86400000);
+      daysToKhatam = diff > 0 ? diff + ' hari lagi' : 'Sudah lewat target';
+    }
+
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;box-shadow:var(--sh)';
+
+    card.innerHTML = '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">'
+      + '<div style="font-size:28px">' + (MEMBER_EMOJI[m]||'') + '</div>'
+      + '<div style="flex:1">'
+      + '<div style="font-size:15px;font-weight:800">' + MEMBER_LABELS[m] + '</div>'
+      + '<div style="font-size:12px;color:var(--muted)">Juz ' + (p.currentJuz||0) + ' - ' + surat.latin + ' ayat ' + (p.currentAyat||1) + '</div>'
+      + '</div>'
+      + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'
+      + '<span style="font-size:11px;font-weight:800;padding:3px 8px;border-radius:10px;background:' + (isReadToday?'var(--teal-d)':'var(--rose-d)') + ';color:' + (isReadToday?'var(--teal)':'var(--rose)') + '">' + (isReadToday?'Sudah':'Belum') + ' tilawah</span>'
+      + (p.streak > 0 ? '<span style="font-size:11px;color:var(--gold);font-weight:700">🔥 ' + p.streak + ' hari</span>' : '')
+      + '</div>'
+      + '</div>'
+
+      // Hafalan progress bar
+      + '<div style="margin-bottom:8px">'
+      + '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px">'
+      + '<span>Hafalan: ' + (p.currentJuz||0) + '/' + (p.targetJuz||30) + ' Juz</span>'
+      + '<span style="font-weight:800;color:var(--gold)">' + juzPct + '%</span>'
+      + '</div>'
+      + '<div style="height:8px;background:var(--bg2);border-radius:4px;overflow:hidden">'
+      + '<div style="height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-l));border-radius:4px;width:' + juzPct + '%;transition:width .4s"></div>'
+      + '</div>'
+      + '</div>'
+
+      // Tilawah this cycle
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
+      + '<span style="font-size:11px;background:var(--sky-d);color:var(--sky);padding:3px 8px;border-radius:10px;font-weight:700">Total: ' + (p.totalPages||0) + ' hal</span>'
+      + '<span style="font-size:11px;background:var(--teal-d);color:var(--teal);padding:3px 8px;border-radius:10px;font-weight:700">Khatam: ' + (p.khatamCount||0) + 'x</span>'
+      + (daysToKhatam ? '<span style="font-size:11px;background:var(--purple-d);color:var(--purple);padding:3px 8px;border-radius:10px;font-weight:700">' + daysToKhatam + '</span>' : '')
+      + '</div>'
+
+      + '<div style="display:flex;gap:8px">'
+      + '<button onclick="openQuranProfileModal(\'' + m + '\')" style="flex:1;padding:7px;background:var(--gold-d);color:var(--gold);border:1px solid var(--gold-b);border-radius:var(--rx);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Edit Profil</button>'
+      + '</div>';
+
+    el.appendChild(card);
+  } // end renderMemberCard
+}
+
+// ===== LOG =====
+async function saveQuranLog() {
+  if (!CU) return;
+  const member = document.getElementById('q-member').value;
+  const pages = parseInt(document.getElementById('q-pages').value) || 0;
+  const ziyadah = parseInt(document.getElementById('q-ziyadah').value) || 0;
+  const muroja = parseInt(document.getElementById('q-muroja').value) || 0;
+  if (pages === 0 && ziyadah === 0 && muroja === 0) return T('Isi minimal satu aktivitas', 'error');
+
+  const suratNo = parseInt(document.getElementById('q-surat').value) || 0;
+  const ayat = parseInt(document.getElementById('q-ayat').value) || 1;
+  const today = document.getElementById('q-date').value || new Date().toISOString().split('T')[0];
+
+  const data = {
+    member, date:today, pages, ziyadah, muroja,
+    quality:document.getElementById('q-quality').value,
+    suratNo, ayat, note:document.getElementById('q-note').value,
+    timestamp:new Date().toISOString(), by:CU.profile.name, familyCode:CU.profile.familyCode
+  };
+
+  try {
+    await addDoc(collection(db,'quranlog'), data);
+
+    // Update profile
+    if (!quranProfiles[member]) quranProfiles[member] = {};
+    const p = quranProfiles[member];
+    p.totalPages = (p.totalPages||0) + pages;
+    if (suratNo > 0) { p.currentSurat = suratNo; p.currentAyat = ayat; }
+    // Check khatam
+    if (p.totalPages > 0 && p.totalPages % 600 < pages) { p.khatamCount = (p.khatamCount||0) + 1; T('Alhamdulillah! Khatam ke-' + p.khatamCount + '!', 'success'); }
+    // Streak
+    if (p.lastReadDate === getPrevDate(today)) { p.streak = (p.streak||0) + 1; }
+    else if (p.lastReadDate !== today) { p.streak = 1; }
+    p.lastReadDate = today;
+    await saveQuranProfiles();
+
+    // Reset form
+    document.getElementById('q-pages').value = '';
+    document.getElementById('q-ziyadah').value = '';
+    document.getElementById('q-muroja').value = '';
+    document.getElementById('q-note').value = '';
+
+    T('Log tilawah tersimpan', 'success');
+    renderQuranFamilyOverview();
+    renderQuranMemberDetail();
+    renderQuranAchievements();
+    loadQuranLogList();
+  } catch(e) { T('Gagal: '+e.code, 'error'); }
+}
+
+function getPrevDate(dateStr) {
+  const d = new Date(dateStr); d.setDate(d.getDate()-1);
+  return d.toISOString().split('T')[0];
+}
+
+async function loadQuranLogList() {
+  if (!CU) return;
+  const el = document.getElementById('quran-log-list'); if(!el) return; el.innerHTML='';
+  try {
+    let snap;
+    try { const q=query(collection(db,'quranlog'),where('familyCode','==',CU.profile.familyCode),orderBy('timestamp','desc')); snap=await getDocs(q); }
+    catch(e) { const q2=query(collection(db,'quranlog'),where('familyCode','==',CU.profile.familyCode)); snap=await getDocs(q2); }
+    if(snap.empty){ el.innerHTML='<div class="empty-state"><div class="empty-icon">📖</div><div class="empty-text">Belum ada log tilawah.</div></div>'; return; }
+    const qColor={lancar:'var(--teal)',baik:'var(--gold)',perlu:'var(--rose)'};
+    const qLabel={lancar:'Lancar','baik':'Baik','perlu':'Perlu Perbaikan'};
+    let count=0;
+    snap.forEach(function(d) {
+      if(count++ > 30) return;
+      const data=d.data();
+      const surat = data.suratNo ? SURAT_DATA.find(function(s){ return s.no===data.suratNo; }) : null;
+      const div=document.createElement('div'); div.style.cssText='background:#fff;border:1px solid var(--border);border-radius:var(--rs);padding:14px;margin-bottom:8px;box-shadow:var(--sh)';
+      div.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+        +'<div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">'+(MEMBER_EMOJI[data.member]||'')+'</span><span style="font-size:13px;font-weight:800">'+(MEMBER_LABELS[data.member]||data.member)+'</span></div>'
+        +'<div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:var(--muted)">'+(data.date||'')+'</span>'
+        +'<span class="del-btn" onclick="deleteQuranLog(\''+d.id+'\')">Hapus</span></div></div>'
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">'
+        +(data.pages?'<span style="font-size:11px;background:var(--sky-d);color:var(--sky);padding:2px 8px;border-radius:10px;font-weight:700">'+data.pages+' hal tilawah</span>':'')
+        +(data.ziyadah?'<span style="font-size:11px;background:var(--gold-d);color:var(--gold);padding:2px 8px;border-radius:10px;font-weight:700">'+data.ziyadah+' ayat ziyadah</span>':'')
+        +(data.muroja?'<span style="font-size:11px;background:var(--teal-d);color:var(--teal);padding:2px 8px;border-radius:10px;font-weight:700">'+data.muroja+' hal muroja\'ah</span>':'')
+        +(data.quality?'<span style="font-size:11px;padding:2px 8px;border-radius:10px;font-weight:700;background:var(--bg2);color:'+(qColor[data.quality]||'var(--muted)')+'">'+( qLabel[data.quality]||data.quality)+'</span>':'')
+        +'</div>'
+        +(surat?'<div style="font-size:12px;color:var(--muted)">Posisi: '+surat.latin+' ayat '+(data.ayat||1)+' (Juz '+surat.juz+')</div>':'')
+        +(data.note?'<div style="font-size:12px;color:var(--muted);margin-top:4px;font-style:italic">'+data.note+'</div>':'');
+      el.appendChild(div);
+    });
+  } catch(e) {}
+}
+
+window.deleteQuranLog = async function(docId) {
+  if(!confirm('Hapus log ini?')) return;
+  try { await deleteDoc(doc(db,'quranlog',docId)); T('Dihapus','success'); loadQuranLogList(); } catch(e) { T('Gagal','error'); }
+};
+
+// ===== MEMBER DETAIL =====
+function renderQuranMemberDetail() {
+  const el = document.getElementById('quran-member-detail'); if(!el) return; el.innerHTML='';
+  QURAN_MEMBERS.forEach(function(m) {
+    const p = quranProfiles[m]||{};
+    const surat = SURAT_DATA.find(function(s){ return s.no===(p.currentSurat||1); })||SURAT_DATA[0];
+    const juzPct = p.targetJuz ? Math.round((p.currentJuz||0)/p.targetJuz*100) : 0;
+
+    // Pages to khatam
+    const pagesLeft = 600 - ((p.totalPages||0)%600);
+    const daysToKhatamTilawah = p.targetPages ? Math.ceil(pagesLeft/(p.targetPages||2)) : 0;
+    const khatamDate = new Date(); khatamDate.setDate(khatamDate.getDate() + daysToKhatamTilawah);
+
+    const card=document.createElement('div'); card.className='card'; card.style.marginBottom='16px';
+    card.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
+      +'<div style="display:flex;align-items:center;gap:12px">'
+      +'<div style="font-size:32px">'+(MEMBER_EMOJI[m]||'')+'</div>'
+      +'<div><div style="font-size:16px;font-weight:800">'+MEMBER_LABELS[m]+'</div>'
+      +'<div style="font-size:12px;color:var(--muted)">'+surat.latin+' (Juz '+surat.juz+')</div></div>'
+      +'</div>'
+      +'<button onclick="openQuranProfileModal(\''+m+'\')" style="padding:6px 12px;background:var(--gold-d);color:var(--gold);border:1px solid var(--gold-b);border-radius:var(--rx);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Edit</button>'
+      +'</div>'
+
+      // Stats grid
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">'
+      +'<div style="text-align:center;background:var(--gold-d);border-radius:var(--rx);padding:12px">'
+      +'<div style="font-size:22px;font-weight:800;color:var(--gold)">'+(p.currentJuz||0)+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);font-weight:700">JUZ HAFALAN</div></div>'
+      +'<div style="text-align:center;background:var(--teal-d);border-radius:var(--rx);padding:12px">'
+      +'<div style="font-size:22px;font-weight:800;color:var(--teal)">'+(p.khatamCount||0)+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);font-weight:700">KALI KHATAM</div></div>'
+      +'<div style="text-align:center;background:var(--rose-d);border-radius:var(--rx);padding:12px">'
+      +'<div style="font-size:22px;font-weight:800;color:var(--rose)">'+(p.streak||0)+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);font-weight:700">HARI STREAK</div></div>'
+      +'</div>'
+
+      // Hafalan progress
+      +'<div style="margin-bottom:12px">'
+      +'<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:6px">'
+      +'<span>Progress Hafalan</span><span style="color:var(--gold)">'+juzPct+'% ('+( p.currentJuz||0)+'/'+( p.targetJuz||30)+' Juz)</span></div>'
+      +'<div style="height:10px;background:var(--bg2);border-radius:5px;overflow:hidden">'
+      +'<div style="height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-l));border-radius:5px;width:'+juzPct+'%"></div>'
+      +'</div>'
+      +(p.targetDate?'<div style="font-size:11px;color:var(--muted);margin-top:4px">Target khatam hafalan: '+p.targetDate+'</div>':'')
+      +'</div>'
+
+      // Tilawah progress
+      +'<div style="background:var(--bg);border-radius:var(--rx);padding:12px;margin-bottom:10px">'
+      +'<div style="font-size:12px;font-weight:800;margin-bottom:8px">Tilawah Siklus Ini</div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px">'
+      +'<span>'+(p.totalPages?p.totalPages%600||600:0)+' / 600 halaman</span>'
+      +'<span>Target: '+(p.targetPages||2)+' hal/hari</span></div>'
+      +'<div style="height:8px;background:var(--bg2);border-radius:4px;overflow:hidden;margin-bottom:6px">'
+      +'<div style="height:100%;background:var(--sky);border-radius:4px;width:'+Math.round(((p.totalPages?p.totalPages%600||600:0)/600)*100)+'%"></div>'
+      +'</div>'
+      +'<div style="font-size:11px;color:var(--muted)">Estimasi khatam: '+(daysToKhatamTilawah>0?khatamDate.toLocaleDateString('id-ID',{day:'numeric',month:'long'}):'Hari ini')+'</div>'
+      +'</div>'
+
+      +(p.note?'<div style="font-size:12px;color:var(--muted);font-style:italic;padding:10px;background:var(--gold-d);border-radius:var(--rx)">Catatan: '+p.note+'</div>':'');
+
+    el.appendChild(card);
+  });
+}
+
+// ===== FATHAN =====
+async function loadFathanChecks() {
+  if (!CU) return;
+  try {
+    const s = await getDoc(doc(db,'fathanchecks',CU.profile.familyCode));
+    if (s.exists()) fathanChecks = s.data();
+  } catch(e) {}
+}
+
+async function saveFathanChecks() {
+  if (!CU) return;
+  try { await setDoc(doc(db,'fathanchecks',CU.profile.familyCode), fathanChecks); } catch(e) {}
+}
+
+function renderFathanPage() {
+  const cont = document.getElementById('fathan-mode-content'); if(!cont) return;
+  cont.innerHTML = '';
+  const fathanMode = getChildMode('fathan');
+  const ageDisplay = getChildAgeDisplay('fathan');
+
+  // Mode indicator
+  const modeBar = document.createElement('div');
+  modeBar.style.cssText='background:var(--sky-d);border:1px solid var(--sky-d);border-radius:var(--rs);padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:8px';
+  modeBar.innerHTML='<span style="font-size:20px">👶</span><div>'
+    +'<div style="font-size:13px;font-weight:800">Fathan - '+ageDisplay+'</div>'
+    +'<div style="font-size:11px;color:var(--muted)">Mode: '+(fathanMode==='toddler'?'Anak Kecil (< 5 tahun) - Checklist Surat & Doa':fathanMode==='child'?'Anak (5-12 tahun) - Checklist + Tilawah':'Dewasa (> 12 tahun) - Full Mode')+'</div>'
+    +'<div style="font-size:10px;color:var(--sky)">Update usia di Edit Profil untuk ubah tampilan</div>'
+    +'</div>';
+  cont.appendChild(modeBar);
+
+  if (fathanMode === 'adult') {
+    // Full adult mode - show same as other members
+    const msg = document.createElement('div'); msg.className='card';
+    const msgTitle = document.createElement('div'); msgTitle.className='card-title'; msgTitle.textContent='Fathan - Mode Dewasa'; msg.appendChild(msgTitle);
+    const msgDesc = document.createElement('div'); msgDesc.style.cssText='font-size:13px;color:var(--muted);margin-bottom:14px'; msgDesc.textContent='Fathan sudah dewasa. Gunakan tab Log Harian untuk mencatat tilawah Fathan seperti anggota keluarga lainnya.'; msg.appendChild(msgDesc);
+    const msgBtn = document.createElement('button'); msgBtn.style.cssText='padding:10px 20px;background:var(--gold);color:#fff;border:none;border-radius:var(--rs);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit'; msgBtn.textContent='Ke Log Harian';
+    msgBtn.addEventListener('click', function(){ var t=document.querySelector('[data-qtab="log"]'); if(t) t.click(); }); msg.appendChild(msgBtn);
+    cont.appendChild(msg);
+    return;
+  }
+
+  // Card container
+  const card = document.createElement('div'); card.className='card';
+
+  if (fathanMode === 'child') {
+    // Child mode: tilawah summary + checklist
+    const childInfo = document.createElement('div');
+    childInfo.style.cssText='background:var(--gold-d);border:1px solid var(--gold-b);border-radius:var(--rs);padding:12px;margin-bottom:14px';
+    const p = quranProfiles['fathan']||{};
+    childInfo.innerHTML='<div style="font-size:12px;font-weight:800;margin-bottom:6px">Progress Tilawah Fathan</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      +'<span style="font-size:11px;background:var(--sky-d);color:var(--sky);padding:2px 8px;border-radius:10px;font-weight:700">Total: '+(p.totalPages||0)+' hal</span>'
+      +'<span style="font-size:11px;background:var(--teal-d);color:var(--teal);padding:2px 8px;border-radius:10px;font-weight:700">Streak: '+(p.streak||0)+' hari</span>'
+      +'</div>';
+    card.appendChild(childInfo);
+  }
+
+  // Surat list (toddler + child)
+  const secSurat = document.createElement('div'); secSurat.className='sec-label'; secSurat.textContent='Juz 30 - Surat Pendek';
+  card.appendChild(secSurat);
+  const surahElCreated = document.createElement('div');
+  surahElCreated.id = 'fathan-surah-list';
+  surahElCreated.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px';
+  card.appendChild(surahElCreated);
+  const secDoa = document.createElement('div'); secDoa.className='sec-label'; secDoa.textContent='Doa Harian';
+  card.appendChild(secDoa);
+  const doaElCreated = document.createElement('div');
+  doaElCreated.id = 'fathan-doa-list';
+  doaElCreated.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:8px';
+  card.appendChild(doaElCreated);
+  cont.appendChild(card);
+
+  // Surah list
+  const surahElRef = document.getElementById('fathan-surah-list'); if(!surahElRef) return;
+  surahElRef.innerHTML = '';
+  FATHAN_SURAH.forEach(function(no) {
+    const s = SURAT_DATA.find(function(x){ return x.no===no; });
+    if (!s) return;
+    const checked = !!(fathanChecks.surah && fathanChecks.surah[no]);
+    const div=document.createElement('div');
+    div.style.cssText='padding:10px 12px;border-radius:var(--rx);cursor:pointer;display:flex;align-items:center;gap:8px;border:1.5px solid '+(checked?'var(--teal)':'var(--border)')+';background:'+(checked?'var(--teal-d)':'#fff')+';transition:all .2s';
+    div.innerHTML='<div style="width:20px;height:20px;border-radius:6px;background:'+(checked?'var(--teal)':'var(--bg2)')+';display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:800;flex-shrink:0">'+(checked?'v':'')+'</div>'
+      +'<div><div style="font-size:12px;font-weight:700;color:var(--text)">'+s.latin+'</div>'
+      +'<div style="font-size:10px;color:var(--muted)">'+(no)+' - '+s.ayat+' ayat</div></div>';
+    div.addEventListener('click', async function(){
+      if(!fathanChecks.surah) fathanChecks.surah={};
+      fathanChecks.surah[no] = !fathanChecks.surah[no];
+      await saveFathanChecks();
+      renderFathanPage();
+      if(fathanChecks.surah[no]) T('Alhamdulillah! '+s.latin+' sudah hafal!', 'success');
+    });
+    surahElRef.appendChild(div);
+  });
+  // Doa list
+  const doaElRef = document.getElementById('fathan-doa-list'); if(!doaElRef) return;
+  doaElRef.innerHTML = '';
+  FATHAN_DOA.forEach(function(doa, idx) {
+    const checked = !!(fathanChecks.doa && fathanChecks.doa[idx]);
+    const div=document.createElement('div');
+    div.style.cssText='padding:10px 12px;border-radius:var(--rx);cursor:pointer;display:flex;align-items:center;gap:8px;border:1.5px solid '+(checked?'var(--gold)':'var(--border)')+';background:'+(checked?'var(--gold-d)':'#fff')+';transition:all .2s';
+    const chkBox2=document.createElement('div'); chkBox2.style.cssText='width:20px;height:20px;border-radius:6px;background:'+(checked?'var(--gold)':'var(--bg2)')+';display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:800;flex-shrink:0'; chkBox2.textContent=checked?'v':''; div.appendChild(chkBox2);
+    const doaTxt=document.createElement('div'); doaTxt.style.cssText='font-size:12px;font-weight:600;color:var(--text)'; doaTxt.textContent=doa; div.appendChild(doaTxt);
+    div.addEventListener('click', async function(){
+      if(!fathanChecks.doa) fathanChecks.doa={};
+      fathanChecks.doa[idx] = !fathanChecks.doa[idx];
+      await saveFathanChecks();
+      renderFathanPage();
+      if(fathanChecks.doa[idx]) T('Masya Allah! '+doa+' sudah hafal!', 'success');
+    });
+    doaElRef.appendChild(div);
+  });
+}
+
+// ===== ACHIEVEMENTS =====
+function renderQuranAchievements() {
+  const el = document.getElementById('quran-achievements'); if(!el) return;
+  el.innerHTML = '';
+
+  // Family streak card
+  const allStreaks = QURAN_MEMBERS.map(function(m){ return quranProfiles[m]&&quranProfiles[m].streak||0; });
+  const minStreak = Math.min.apply(null,allStreaks);
+  const familyStreakCard = document.createElement('div');
+  familyStreakCard.className='card';
+  familyStreakCard.innerHTML='<div class="card-title">🔥 Streak Keluarga</div>'
+    +'<div style="text-align:center;padding:16px 0">'
+    +'<div style="font-size:56px;font-weight:800;color:var(--gold)">'+minStreak+'</div>'
+    +'<div style="font-size:14px;color:var(--muted)">hari berturut-turut semua tilawah</div>'
+    +'</div>'
+    +'<div style="display:flex;gap:8px;justify-content:center">'
+    + QURAN_MEMBERS.map(function(m){ return '<div style="text-align:center"><div style="font-size:18px">'+(MEMBER_EMOJI[m]||'')+'</div><div style="font-size:11px;font-weight:700;color:var(--gold)">'+(quranProfiles[m]&&quranProfiles[m].streak||0)+'</div><div style="font-size:10px;color:var(--muted)">hari</div></div>'; }).join('')
+    +'</div>';
+  el.appendChild(familyStreakCard);
+
+  // Khatam history
+  const khatamCard=document.createElement('div'); khatamCard.className='card';
+  khatamCard.innerHTML='<div class="card-title">📜 Total Khatam Tilawah Keluarga</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    +QURAN_MEMBERS.map(function(m){ const p=quranProfiles[m]||{}; return '<div style="background:var(--bg);border-radius:var(--rx);padding:14px;text-align:center"><div style="font-size:22px">'+(MEMBER_EMOJI[m]||'')+'</div><div style="font-size:24px;font-weight:800;color:var(--teal)">'+(p.khatamCount||0)+'x</div><div style="font-size:11px;color:var(--muted)">'+MEMBER_LABELS[m]+'</div><div style="font-size:10px;color:var(--muted)">'+(p.totalPages||0)+' halaman total</div></div>'; }).join('')
+    +'</div>';
+  el.appendChild(khatamCard);
+
+  // Fathan progress
+  const surahDone = Object.values(fathanChecks.surah||{}).filter(Boolean).length;
+  const doaDone = Object.values(fathanChecks.doa||{}).filter(Boolean).length;
+  const fathanCard=document.createElement('div'); fathanCard.className='card';
+  fathanCard.innerHTML='<div class="card-title">👶 Fathan - Progress Hafalan</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    +'<div style="background:var(--gold-d);border-radius:var(--rx);padding:14px;text-align:center">'
+    +'<div style="font-size:28px;font-weight:800;color:var(--gold)">'+surahDone+'/'+FATHAN_SURAH.length+'</div>'
+    +'<div style="font-size:11px;color:var(--muted)">Surat Pendek Hafal</div>'
+    +'<div style="height:5px;background:var(--bg2);border-radius:3px;margin-top:8px;overflow:hidden">'
+    +'<div style="height:100%;background:var(--gold);border-radius:3px;width:'+Math.round(surahDone/FATHAN_SURAH.length*100)+'%"></div></div>'
+    +'</div>'
+    +'<div style="background:var(--teal-d);border-radius:var(--rx);padding:14px;text-align:center">'
+    +'<div style="font-size:28px;font-weight:800;color:var(--teal)">'+doaDone+'/'+FATHAN_DOA.length+'</div>'
+    +'<div style="font-size:11px;color:var(--muted)">Doa Harian Hafal</div>'
+    +'<div style="height:5px;background:var(--bg2);border-radius:3px;margin-top:8px;overflow:hidden">'
+    +'<div style="height:100%;background:var(--teal);border-radius:3px;width:'+Math.round(doaDone/FATHAN_DOA.length*100)+'%"></div></div>'
+    +'</div></div>';
+  el.appendChild(fathanCard);
+}
+
+// ===== SHARE =====
+function openShareModal() {
+  const today = new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  let text = 'Progress Tadarus Al-Quran Keluarga\n' + today + '\n\n';
+  let cardHtml = '<div style="font-family:\'Plus Jakarta Sans\',sans-serif">'
+    +'<div style="font-family:\'Amiri\',serif;font-size:18px;color:#C9A84C;margin-bottom:4px;direction:rtl">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم</div>'
+    +'<div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:2px">Tadarus Al-Quran Keluarga</div>'
+    +'<div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:16px">'+today+'</div>';
+
+  QURAN_MEMBERS.forEach(function(m) {
+    const p = quranProfiles[m]||{};
+    const surat=SURAT_DATA.find(function(s){ return s.no===(p.currentSurat||1); })||SURAT_DATA[0];
+    const juzPct=p.targetJuz?Math.round((p.currentJuz||0)/p.targetJuz*100):0;
+    const isToday = p.lastReadDate===new Date().toISOString().split('T')[0];
+    text += (MEMBER_LABELS[m]+': Juz '+(p.currentJuz||0)+'/'+(p.targetJuz||30)+' - '+surat.latin+' - Streak '+(p.streak||0)+' hari '+(isToday?'(Sudah tilawah)':'(Belum tilawah)')+'\n');
+    cardHtml+='<div style="background:rgba(255,255,255,.1);border-radius:10px;padding:12px;margin-bottom:8px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+      +'<span style="font-size:13px;font-weight:800;color:#fff">'+(MEMBER_EMOJI[m]||'')+' '+MEMBER_LABELS[m]+'</span>'
+      +'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:'+(isToday?'#27AE60':'#C0392B')+';color:#fff;font-weight:700">'+(isToday?'Sudah':'Belum')+'</span>'
+      +'</div>'
+      +'<div style="font-size:11px;color:rgba(255,255,255,.8);margin-bottom:6px">'+surat.latin+' ayat '+(p.currentAyat||1)+' - 🔥 '+(p.streak||0)+' hari</div>'
+      +'<div style="height:5px;background:rgba(255,255,255,.2);border-radius:3px;overflow:hidden">'
+      +'<div style="height:100%;background:#C9A84C;border-radius:3px;width:'+juzPct+'%"></div></div>'
+      +'<div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:3px">Hafalan '+( p.currentJuz||0)+'/'+( p.targetJuz||30)+' Juz ('+juzPct+'%)</div>'
+      +'</div>';
+  });
+
+  const surahDone=Object.values(fathanChecks.surah||{}).filter(Boolean).length;
+  cardHtml+='<div style="background:rgba(255,255,255,.1);border-radius:10px;padding:12px;margin-bottom:8px">'
+    +'<div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:4px">👶 Fathan</div>'
+    +'<div style="font-size:11px;color:rgba(255,255,255,.8)">Surat pendek hafal: '+surahDone+'/'+FATHAN_SURAH.length+'</div>'
+    +'</div>';
+  text += 'Fathan: '+surahDone+'/'+FATHAN_SURAH.length+' surat pendek\n\nTracking via Amanah - Dashboard Parenting Keluarga';
+  cardHtml+='<div style="font-size:10px;color:rgba(255,255,255,.5);text-align:center;margin-top:12px">Amanah - Dashboard Parenting Keluarga</div></div>';
+
+  document.getElementById('share-card-content').innerHTML = cardHtml;
+  window._shareText = text;
+  openModal('modal-quran-share');
+}
+
+
 </script>
 
 
