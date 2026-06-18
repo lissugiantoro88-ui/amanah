@@ -1175,14 +1175,25 @@ function renderRoadmap(cid) {
         ${phase.items.map(item=>{
           const st=rmState[item.id]||'none';
           const dimColors={spiritual:'badge-gold',akademik:'badge-sky',fisik:'badge-teal',karakter:'badge-purple',kemandirian:'badge-rose'};
+          const evalData=rmState['eval_'+item.id]||{};
+          const evalBadge=evalData.status?
+            (evalData.status==='berjalan'?'<span style="font-size:10px;background:#E8F4FD;color:var(--sky);padding:2px 7px;border-radius:10px;font-weight:700">🔄 Berjalan</span>':
+             evalData.status==='selesai'?'<span style="font-size:10px;background:var(--teal-dim);color:var(--teal);padding:2px 7px;border-radius:10px;font-weight:700">✅ Selesai</span>':
+             evalData.status==='dihentikan'?'<span style="font-size:10px;background:var(--rose-dim);color:var(--rose);padding:2px 7px;border-radius:10px;font-weight:700">🛑 Dihentikan</span>':
+             '<span style="font-size:10px;background:var(--bg2);color:var(--text-dim);padding:2px 7px;border-radius:10px;font-weight:700">⏳ Belum</span>'):'';
+          const starStr=evalData.rating?'⭐'.repeat(evalData.rating):'';
           return `<div class="ri-item">
             <div class="ri-check ${st==='done'?'done':st==='progress'?'progress':''}" onclick="cycleItem('${item.id}','${cid}')">${st==='done'?'✓':st==='progress'?'◑':''}</div>
             <div class="ri-content">
               <div class="ri-label${st==='done'?' done':''}">${item.label}</div>
               <div class="ri-desc">${item.desc}</div>
-              <div style="display:flex;gap:6px;align-items:center;margin-top:5px;flex-wrap:wrap">
+              ${evalData.note?`<div style="font-size:11px;color:var(--text-muted);margin-top:4px;font-style:italic;line-height:1.4">📝 ${evalData.note.substring(0,80)}${evalData.note.length>80?'...':''}</div>`:''}
+              <div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap">
                 <span class="ri-dim badge ${dimColors[item.dim]||'badge-sky'}">${item.dim}</span>
-                <span onclick="deleteRoadmapItem('${item.id}','${cid}','${phase.id}')" style="font-size:10px;color:var(--rose);cursor:pointer;font-weight:600">Hapus</span>
+                ${evalBadge}
+                ${starStr?`<span style="font-size:11px">${starStr}</span>`:''}
+                <span onclick="openEvalModal('${item.id}','${cid}')" style="font-size:11px;color:var(--sky);cursor:pointer;font-weight:700;padding:2px 7px;background:var(--sky-dim);border-radius:10px">📊 Evaluasi</span>
+                <span onclick="deleteRoadmapItem('${item.id}','${cid}','${phase.id}')" style="font-size:11px;color:var(--rose);cursor:pointer;font-weight:700">Hapus</span>
               </div>
             </div>
           </div>`;
@@ -1587,11 +1598,213 @@ function _toast(msg,type){
   setTimeout(()=>{ t.className='toast'; },2800);
 }
 window.toast=_toast;
+// ========== EVALUASI ITEM ==========
+let currentEvalItemId = null;
+let currentEvalChild = null;
+let evalRating = 0;
+
+window.openEvalModal = async function(itemId, cid){
+  currentEvalItemId = itemId;
+  currentEvalChild = cid;
+  evalRating = 0;
+
+  // Find item data
+  let itemData = null;
+  childrenData[cid].phases.forEach(function(phase){
+    phase.items.forEach(function(item){
+      if(item.id === itemId) itemData = item;
+    });
+  });
+  if(!itemData) return;
+
+  document.getElementById('eval-item-name').textContent = itemData.label;
+  document.getElementById('eval-item-desc').textContent = itemData.desc;
+
+  // Load existing eval
+  const existing = rmState['eval_'+itemId] || {};
+  document.getElementById('eval-status').value = existing.status || 'belum';
+  document.getElementById('eval-start').value = existing.startDate || '';
+  document.getElementById('eval-end').value = existing.endDate || '';
+  document.getElementById('eval-note').value = existing.note || '';
+  document.getElementById('eval-decision').value = existing.decision || '';
+  document.getElementById('eval-followup').value = existing.followup || '';
+
+  // Init stars
+  evalRating = existing.rating || 0;
+  initEvalStars(evalRating);
+
+  // Load history
+  await loadEvalHistory(itemId);
+
+  _openModal('modal-eval');
+};
+
+function initEvalStars(val){
+  const cont = document.getElementById('eval-stars');
+  cont.innerHTML = '';
+  for(let i=1; i<=5; i++){
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.textContent = '★';
+    s.style.color = i <= val ? 'var(--gold)' : 'var(--text-dim)';
+    s.style.opacity = '1';
+    s.dataset.v = i;
+    s.onclick = function(){
+      evalRating = i;
+      document.getElementById('eval-star-val').textContent =
+        ['','Tidak Efektif','Kurang Efektif','Cukup Efektif','Efektif','Sangat Efektif'][i];
+      cont.querySelectorAll('.star').forEach(function(star){
+        star.style.color = parseInt(star.dataset.v) <= i ? 'var(--gold)' : 'var(--text-dim)';
+      });
+    };
+    cont.appendChild(s);
+  }
+  const labels = ['Belum dinilai','Tidak Efektif','Kurang Efektif','Cukup Efektif','Efektif','Sangat Efektif'];
+  document.getElementById('eval-star-val').textContent = labels[val] || 'Belum dinilai';
+}
+
+window.saveEval = async function(){
+  if(!CU || !currentEvalItemId) return;
+  const evalData = {
+    status: document.getElementById('eval-status').value,
+    rating: evalRating,
+    startDate: document.getElementById('eval-start').value,
+    endDate: document.getElementById('eval-end').value,
+    note: document.getElementById('eval-note').value,
+    decision: document.getElementById('eval-decision').value,
+    followup: document.getElementById('eval-followup').value,
+    updatedAt: new Date().toISOString(),
+    updatedBy: CU.profile.name
+  };
+
+  // Save to rmState
+  rmState['eval_'+currentEvalItemId] = evalData;
+  await saveRmState();
+
+  // Also save to eval history collection
+  try{
+    await addDoc(collection(db,'evalhistory'),{
+      itemId: currentEvalItemId,
+      child: currentEvalChild,
+      familyCode: CU.profile.familyCode,
+      ...evalData,
+      date: new Date().toISOString()
+    });
+  }catch(e){ console.warn('eval history save failed:', e); }
+
+  _closeModal('modal-eval');
+  renderRoadmap(currentEvalChild);
+  _toast('Evaluasi tersimpan ✓','success');
+};
+
+async function loadEvalHistory(itemId){
+  const el = document.getElementById('eval-history');
+  el.innerHTML = '';
+  try{
+    const q = query(
+      collection(db,'evalhistory'),
+      where('itemId','==',itemId),
+      where('familyCode','==',CU.profile.familyCode),
+      orderBy('date','desc')
+    );
+    const snap = await getDocs(q);
+    if(snap.empty){
+      el.innerHTML = '<div style="font-size:12px;color:var(--text-dim);text-align:center;padding:16px">Belum ada riwayat evaluasi</div>';
+      return;
+    }
+    const statusLabel = {belum:'⏳ Belum',berjalan:'🔄 Berjalan',selesai:'✅ Selesai',dihentikan:'🛑 Dihentikan'};
+    const effLabel = ['','Tidak Efektif','Kurang Efektif','Cukup Efektif','Efektif','Sangat Efektif'];
+    snap.forEach(function(d){
+      const data = d.data();
+      const dt = new Date(data.date);
+      const div = document.createElement('div');
+      div.style.cssText = 'background:var(--bg);border-radius:var(--radius-xs);padding:12px;margin-bottom:8px;border:1px solid var(--border)';
+      div.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:6px">'
+        + '<span style="font-size:11px;font-weight:700;color:var(--gold)">'+dt.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})+'</span>'
+        + '<span style="font-size:11px;color:var(--text-muted)">oleh '+data.updatedBy+'</span>'
+        + '</div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">'
+        + '<span style="font-size:11px;font-weight:600">'+(statusLabel[data.status]||data.status)+'</span>'
+        + (data.rating ? '<span style="font-size:11px;color:var(--gold)">'+'⭐'.repeat(data.rating)+' '+effLabel[data.rating]+'</span>' : '')
+        + '</div>'
+        + (data.note ? '<div style="font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:4px">'+data.note+'</div>' : '')
+        + (data.decision ? '<div style="font-size:11px;color:var(--sky);font-weight:600">Keputusan: '+data.decision+'</div>' : '')
+        + (data.followup ? '<div style="font-size:11px;color:var(--teal)">→ '+data.followup+'</div>' : '');
+      el.appendChild(div);
+    });
+  }catch(e){
+    el.innerHTML = '<div style="font-size:12px;color:var(--text-dim);text-align:center;padding:16px">Riwayat akan muncul setelah index Firestore siap.</div>';
+  }
+}
+
 // ========== REGISTER FUNCTIONS TO PROXY ==========
 const _fnMap={doLogin,doRegister,doLogout,showLogin,showReg,demoLogin,showPage,openChild,switchTab,togglePhase,cycleItem};
 Object.keys(_fnMap).forEach(k=>{ window['_fn_'+k]=window[k]; });
-['openEditChildModal','saveChildVision','addRoadmapItem','setStar','openCheckinModal','saveCheckin','deleteCheckin','openCommModal','saveComm','deleteComm','pickChip','saveMalamReview','deleteMalam','openModal','closeModal','toast','deleteRoadmapItem'].forEach(k=>{ if(window[k]) window['_fn_'+k]=window[k]; });
+['openEditChildModal','saveChildVision','addRoadmapItem','setStar','openCheckinModal','saveCheckin','deleteCheckin','openCommModal','saveComm','deleteComm','pickChip','saveMalamReview','deleteMalam','openModal','closeModal','toast','deleteRoadmapItem','openEvalModal','saveEval','updatePhaseStatus','addNewPhase','deletePhase'].forEach(k=>{ if(window[k]) window['_fn_'+k]=window[k]; });
 if(window._queue){ window._queue.forEach(item=>{ if(window['_fn_'+item[0]]) window['_fn_'+item[0]].apply(null,item[1]); }); window._queue=[]; }
 </script>
+<!-- MODAL: EVALUASI ITEM -->
+<div class="modal-overlay" id="modal-eval">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title">📊 Evaluasi Item</div>
+      <div class="modal-close" onclick="closeModal('modal-eval')">✕</div>
+    </div>
+    <div id="eval-item-name" style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px"></div>
+    <div id="eval-item-desc" style="font-size:12px;color:var(--text-muted);margin-bottom:16px"></div>
+
+    <div class="form-group">
+      <label>Status Pelaksanaan</label>
+      <select id="eval-status">
+        <option value="belum">⏳ Belum Mulai</option>
+        <option value="berjalan">🔄 Sedang Berjalan</option>
+        <option value="selesai">✅ Selesai / Berhasil</option>
+        <option value="dihentikan">🛑 Dihentikan</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Efektivitas (1 = Tidak Efektif, 5 = Sangat Efektif)</label>
+      <div class="stars" id="eval-stars"></div>
+      <div id="eval-star-val" style="font-size:13px;color:var(--gold);font-weight:800;margin-top:6px">Belum dinilai</div>
+    </div>
+    <div class="form-group">
+      <label>Tanggal Mulai</label>
+      <input type="date" id="eval-start">
+    </div>
+    <div class="form-group">
+      <label>Tanggal Selesai (opsional)</label>
+      <input type="date" id="eval-end">
+    </div>
+    <div class="form-group">
+      <label>Catatan Evaluasi</label>
+      <textarea id="eval-note" placeholder="Bagaimana pelaksanaannya? Apa hasilnya? Efektif atau tidak? Kenapa?"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Keputusan</label>
+      <select id="eval-decision">
+        <option value="">-- Pilih keputusan --</option>
+        <option value="lanjut">✅ Lanjutkan</option>
+        <option value="modifikasi">🔧 Lanjut dengan modifikasi</option>
+        <option value="ganti">🔄 Ganti dengan aktivitas lain</option>
+        <option value="hentikan">🛑 Hentikan</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Tindak Lanjut</label>
+      <input type="text" id="eval-followup" placeholder="Apa yang akan dilakukan selanjutnya?">
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-eval')">Batal</button>
+      <button class="btn btn-primary" onclick="saveEval()">Simpan Evaluasi</button>
+    </div>
+
+    <div style="margin-top:20px">
+      <div class="section-label" style="margin-bottom:10px">Riwayat Evaluasi</div>
+      <div id="eval-history"></div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
