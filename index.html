@@ -1086,6 +1086,79 @@ function renderRoadmap(cid) {
       delItem.addEventListener('click', function(){ deleteRoadmapItem(item.id, cid, phase.id); }); acts.appendChild(delItem);
       content.appendChild(acts); ri.appendChild(chk); ri.appendChild(content); body.appendChild(ri);
     });
+
+    // Inline add item form at bottom of each phase
+    const addRow = document.createElement('div');
+    addRow.style.cssText = 'padding:10px 0;border-top:1px dashed var(--border);margin-top:4px';
+    const addInner = document.createElement('div');
+    addInner.id = 'add-item-row-' + phase.id;
+    addInner.style.display = 'none';
+    addInner.innerHTML = '<div style="display:flex;gap:8px;margin-bottom:8px">'
+      + '<input type="text" id="ni-label-' + phase.id + '" placeholder="Nama item baru..." style="flex:1;font-size:12px;padding:8px 10px;border:1.5px solid var(--gold-b);border-radius:var(--rx);background:#fff;font-family:inherit;outline:none">'
+      + '</div>'
+      + '<div style="display:flex;gap:8px;margin-bottom:8px">'
+      + '<input type="text" id="ni-desc-' + phase.id + '" placeholder="Keterangan (opsional)..." style="flex:1;font-size:12px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--rx);background:#fff;font-family:inherit;outline:none">'
+      + '</div>'
+      + '<div style="display:flex;gap:8px;align-items:center">'
+      + '<select id="ni-dim-' + phase.id + '" style="font-size:12px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--rx);background:#fff;font-family:inherit">'
+      + '<option value="spiritual">Spiritual</option>'
+      + '<option value="akademik">Akademik</option>'
+      + '<option value="fisik">Fisik</option>'
+      + '<option value="emosi">Emosi</option>'
+      + '<option value="sosial">Sosial</option>'
+      + '<option value="digital">Digital</option>'
+      + '<option value="finansial">Finansial</option>'
+      + '<option value="karakter">Karakter</option>'
+      + '</select>'
+      + '<button style="padding:7px 14px;background:var(--teal);color:#fff;border:none;border-radius:var(--rx);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit" id="ni-save-' + phase.id + '">Simpan</button>'
+      + '<button style="padding:7px 12px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:var(--rx);font-size:12px;cursor:pointer;font-family:inherit" id="ni-cancel-' + phase.id + '">Batal</button>'
+      + '</div>';
+
+    const addBtn = document.createElement('button');
+    addBtn.style.cssText = 'width:100%;padding:8px;background:var(--gold-d);color:var(--gold);border:1.5px dashed var(--gold-b);border-radius:var(--rx);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s';
+    addBtn.textContent = '+ Tambah Item ke Fase Ini';
+    addBtn.id = 'ni-btn-' + phase.id;
+
+    // Capture phase for closure
+    (function(phaseRef, cid2) {
+      addBtn.addEventListener('click', function() {
+        addInner.style.display = '';
+        addBtn.style.display = 'none';
+        const lbl = document.getElementById('ni-label-' + phaseRef.id);
+        if (lbl) lbl.focus();
+      });
+
+      addRow.appendChild(addInner);
+      addRow.appendChild(addBtn);
+      body.appendChild(addRow);
+
+      // Wire save after DOM ready
+      setTimeout(function() {
+        const saveBtn = document.getElementById('ni-save-' + phaseRef.id);
+        const cancelBtn = document.getElementById('ni-cancel-' + phaseRef.id);
+        if (saveBtn) {
+          saveBtn.addEventListener('click', async function() {
+            const label = (document.getElementById('ni-label-' + phaseRef.id)||{}).value||'';
+            if (!label.trim()) { if(typeof T==='function') T('Isi nama item', 'error'); return; }
+            const desc = (document.getElementById('ni-desc-' + phaseRef.id)||{}).value||'';
+            const dim = (document.getElementById('ni-dim-' + phaseRef.id)||{}).value||'karakter';
+            phaseRef.items.push({id:'x'+Date.now(), label:label.trim(), desc:desc.trim()||label.trim(), dim});
+            await saveCustomData();
+            renderRoadmap(cid2);
+            if(typeof T==='function') T('Item ditambahkan', 'success');
+          });
+        }
+        if (cancelBtn) {
+          cancelBtn.addEventListener('click', function() {
+            const ai = document.getElementById('add-item-row-' + phaseRef.id);
+            const ab = document.getElementById('ni-btn-' + phaseRef.id);
+            if (ai) ai.style.display = 'none';
+            if (ab) ab.style.display = '';
+          });
+        }
+      }, 50);
+    })(phase, cid);
+
     block.appendChild(hdr); block.appendChild(body); cont.appendChild(block);
   });
 }
