@@ -978,7 +978,7 @@ async function initApp(user, profileOverride) {
   // Save to family index
   try { await setDoc(doc(db,'users_family',user.uid), {uid:user.uid,...p}, {merge:true}); } catch(e){}
   // If anak, auto-navigate to their own profile
-  if (!isParent) {
+  if (!window._isParent) {
     const myChildId = ['fakhrur','faqih','fathan'].includes(p.role) ? p.role : null;
     if (myChildId) {
       setTimeout(function(){ openChild(myChildId); }, 500);
