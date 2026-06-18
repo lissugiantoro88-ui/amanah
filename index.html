@@ -754,12 +754,27 @@ window._loadingTimer = setTimeout(function() {
 <div class="modal-overlay" id="modal-edit-child">
   <div class="modal">
     <div class="modal-hdr"><div class="modal-title" id="edit-child-title">✏️ Edit Profil Anak</div><div class="modal-close" onclick="closeModal('modal-edit-child')">✕</div></div>
-    <div class="form-group"><label>Visi / Target Anak</label><textarea id="ec-vision" placeholder="Target besar yang ingin dicapai..."></textarea></div>
-    <div class="form-group"><label>Tambah Item Peta Jalan</label><input type="text" id="ec-new-item" placeholder="Contoh: Hafalan 15 Juz..."></div>
-    <div class="form-group"><label>Dimensi</label><select id="ec-dim"><option value="spiritual">🤲 Spiritual</option><option value="akademik">🧠 Akademik</option><option value="fisik">💪 Fisik</option><option value="karakter">🎯 Karakter</option><option value="kemandirian">🧳 Kemandirian</option></select></div>
-    <div class="form-group"><label>Fase</label><select id="ec-phase"></select></div>
+
+    <div class="section-label" style="margin-top:0">Visi & Target</div>
+    <div class="form-group"><textarea id="ec-vision" placeholder="Target besar yang ingin dicapai..."></textarea></div>
+    <button class="btn btn-primary btn-sm" onclick="saveChildVision()" style="margin-bottom:20px">Simpan Visi</button>
+
+    <div class="section-label">Kelola Fase</div>
+    <div id="ec-phase-list" style="margin-bottom:12px"></div>
+    <div style="background:var(--bg);border-radius:var(--radius-sm);padding:14px;margin-bottom:20px">
+      <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px">+ Tambah Fase Baru</div>
+      <div class="form-group"><label>Nama Fase</label><input type="text" id="ec-new-phase-title" placeholder="Contoh: SMA Kelas 10"></div>
+      <div class="form-group"><label>Periode</label><input type="text" id="ec-new-phase-period" placeholder="Contoh: 2025-2026"></div>
+      <div class="form-group"><label>Tema</label><input type="text" id="ec-new-phase-theme" placeholder="Contoh: Adaptasi & Fondasi"></div>
+      <button class="btn btn-teal btn-sm" onclick="addNewPhase()">+ Tambah Fase</button>
+    </div>
+
+    <div class="section-label">Tambah Item ke Peta Jalan</div>
+    <div class="form-group"><label>Nama Item</label><input type="text" id="ec-new-item" placeholder="Contoh: Hafalan 15 Juz..."></div>
     <div class="form-group"><label>Keterangan</label><input type="text" id="ec-desc" placeholder="Penjelasan singkat..."></div>
-    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-edit-child')">Tutup</button><button class="btn btn-teal" onclick="addRoadmapItem()">+ Tambah Item</button><button class="btn btn-primary" onclick="saveChildVision()">Simpan Visi</button></div>
+    <div class="form-group"><label>Dimensi</label><select id="ec-dim"><option value="spiritual">🤲 Spiritual</option><option value="akademik">🧠 Akademik</option><option value="fisik">💪 Fisik</option><option value="karakter">🎯 Karakter</option><option value="kemandirian">🧳 Kemandirian</option></select></div>
+    <div class="form-group"><label>Masukkan ke Fase</label><select id="ec-phase"></select></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-edit-child')">Tutup</button><button class="btn btn-primary" onclick="addRoadmapItem()">+ Tambah Item</button></div>
   </div>
 </div>
 
@@ -1147,7 +1162,10 @@ function renderRoadmap(cid) {
           <div class="phase-title">${phase.title} <span style="font-weight:400;color:var(--text-muted);font-size:12px">${phase.period}</span></div>
           <div class="phase-theme" style="font-size:11px;color:var(--text-muted);margin-top:2px">${phase.theme} · ${done}/${phase.items.length} selesai</div>
         </div>
-        <div class="badge badge-${phase.status==='current'?'gold':phase.status==='done'?'teal':'sky'}">${phase.status==='current'?'Berjalan':phase.status==='done'?'Selesai':'Mendatang'}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="badge badge-${phase.status==='current'?'gold':phase.status==='done'?'teal':'sky'}">${phase.status==='current'?'Berjalan':phase.status==='done'?'Selesai':'Mendatang'}</div>
+          <span onclick="event.stopPropagation();deletePhase('${phase.id}')" style="font-size:12px;color:var(--rose);cursor:pointer;font-weight:700;padding:2px 6px">✕</span>
+        </div>
       </div>
       <div class="phase-body${isOpen?'':' collapsed'}" id="pb-${phase.id}">
         <div class="phase-progress">
@@ -1201,9 +1219,75 @@ window.openEditChildModal=()=>{
   const c2=childrenData[CK];
   document.getElementById('edit-child-title').textContent='Edit '+c2.name;
   document.getElementById('ec-vision').value=c2.vision;
-  const sel=document.getElementById('ec-phase');
-  sel.innerHTML=c2.phases.map(p=>'<option value="'+p.id+'">'+p.title+'</option>').join('');
+  renderPhaseOptions();
   _openModal('modal-edit-child');
+};
+
+function renderPhaseOptions(){
+  if(!CK) return;
+  const c2=childrenData[CK];
+  const sel=document.getElementById('ec-phase');
+  sel.innerHTML=c2.phases.map(p=>'<option value="'+p.id+'">'+p.title+' ('+p.period+')</option>').join('');
+  // Render phase list for editing
+  const phaseList=document.getElementById('ec-phase-list');
+  if(!phaseList) return;
+  phaseList.innerHTML='';
+  c2.phases.forEach(function(phase){
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bg2)';
+    const statusColors={current:'badge-gold',upcoming:'badge-sky',done:'badge-teal'};
+    const statusLabel={current:'Berjalan',upcoming:'Mendatang',done:'Selesai'};
+    row.innerHTML='<div style="flex:1"><div style="font-size:13px;font-weight:700">'+phase.title+'</div>'
+      +'<div style="font-size:11px;color:var(--text-muted)">'+phase.period+' · '+phase.theme+'</div></div>'
+      +'<select class="phase-status-sel" data-pid="'+phase.id+'" onchange="updatePhaseStatus(this)" style="font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg)">'
+      +'<option value="current" '+(phase.status==='current'?'selected':'')+'>Berjalan</option>'
+      +'<option value="upcoming" '+(phase.status==='upcoming'?'selected':'')+'>Mendatang</option>'
+      +'<option value="done" '+(phase.status==='done'?'selected':'')+'>Selesai</option>'
+      +'</select>';
+    phaseList.appendChild(row);
+  });
+}
+
+window.updatePhaseStatus=async function(el){
+  if(!CK) return;
+  const phaseId=el.dataset.pid;
+  const newStatus=el.value;
+  const phase=childrenData[CK].phases.find(p=>p.id===phaseId);
+  if(phase){ phase.status=newStatus; await saveCustomData(); renderRoadmap(CK); _toast('Status fase diperbarui','success'); }
+};
+
+window.addNewPhase=async function(){
+  if(!CK) return;
+  const title=document.getElementById('ec-new-phase-title').value.trim();
+  const period=document.getElementById('ec-new-phase-period').value.trim();
+  const theme=document.getElementById('ec-new-phase-theme').value.trim();
+  if(!title) return _toast('Isi nama fase','error');
+  const newPhase={
+    id:'ph'+Date.now(),
+    title:title,
+    period:period||'',
+    theme:theme||'',
+    status:'upcoming',
+    items:[]
+  };
+  childrenData[CK].phases.push(newPhase);
+  await saveCustomData();
+  document.getElementById('ec-new-phase-title').value='';
+  document.getElementById('ec-new-phase-period').value='';
+  document.getElementById('ec-new-phase-theme').value='';
+  renderPhaseOptions();
+  renderRoadmap(CK);
+  _toast('Fase baru ditambahkan','success');
+};
+
+window.deletePhase=async function(phaseId){
+  if(!CK) return;
+  if(!confirm('Hapus fase ini beserta semua itemnya?')) return;
+  childrenData[CK].phases=childrenData[CK].phases.filter(p=>p.id!==phaseId);
+  await saveCustomData();
+  renderPhaseOptions();
+  renderRoadmap(CK);
+  _toast('Fase dihapus','success');
 };
 window.saveChildVision=async()=>{
   if(!CK) return;
