@@ -523,35 +523,29 @@ window._lt = setTimeout(function(){
   <!-- KALENDER -->
   <div id="page-kalender" class="page">
     <div style="font-size:20px;font-weight:800;margin-bottom:4px">Kalender Keluarga</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:18px">Event, jadwal & perencanaan keluarga</div>
-    <button class="btn btn-primary btn-sm" id="btn-add-event" style="margin-bottom:18px;width:auto;padding:10px 20px">+ Tambah Event</button>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:18px">Event, jadwal &amp; perencanaan keluarga</div>
+    <button class="btn btn-primary" id="btn-add-event" style="margin-bottom:18px;width:auto;padding:10px 20px">+ Tambah Event</button>
     <div id="event-list"></div>
   </div>
 
   <!-- SAYA -->
   <div id="page-saya" class="page">
     <div style="font-size:20px;font-weight:800;margin-bottom:4px">Evaluasi Diri</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:18px">Checklist & evaluasi peran Ayah & Ibu</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:18px">Checklist &amp; evaluasi peran Ayah &amp; Ibu</div>
     <div class="card" id="self-eval-ayah-card">
-      <div class="card-title">
-        <span>👨 Checklist Ayah</span>
-        <button class="btn btn-ghost btn-xs" id="btn-add-dim-ayah">+ Tambah</button>
-      </div>
+      <div class="card-title"><span>Ayah - Checklist Mingguan</span><button class="btn btn-ghost btn-xs" id="btn-add-dim-ayah">+ Tambah Dimensi</button></div>
       <div id="self-dims-ayah"></div>
       <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
-        <div class="fg"><label>Catatan Minggu Ini (Ayah)</label><textarea id="self-note-ayah" placeholder="Refleksi, hal yang perlu diperbaiki, pencapaian..." style="min-height:70px"></textarea></div>
-        <button class="btn btn-primary btn-sm" id="btn-save-self-ayah">💾 Simpan Evaluasi Ayah</button>
+        <div class="fg"><label>Catatan Minggu Ini (Ayah)</label><textarea id="self-note-ayah" placeholder="Refleksi, pencapaian, hal yang perlu diperbaiki..." style="min-height:70px"></textarea></div>
+        <button class="btn btn-primary btn-sm" id="btn-save-self-ayah">Simpan Evaluasi Ayah</button>
       </div>
     </div>
     <div class="card" id="self-eval-ibu-card">
-      <div class="card-title">
-        <span>👩 Checklist Ibu</span>
-        <button class="btn btn-ghost btn-xs" id="btn-add-dim-ibu">+ Tambah</button>
-      </div>
+      <div class="card-title"><span>Ibu - Checklist Mingguan</span><button class="btn btn-ghost btn-xs" id="btn-add-dim-ibu">+ Tambah Dimensi</button></div>
       <div id="self-dims-ibu"></div>
       <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
-        <div class="fg"><label>Catatan Minggu Ini (Ibu)</label><textarea id="self-note-ibu" placeholder="Refleksi, hal yang perlu diperbaiki, pencapaian..." style="min-height:70px"></textarea></div>
-        <button class="btn btn-primary btn-sm" id="btn-save-self-ibu">💾 Simpan Evaluasi Ibu</button>
+        <div class="fg"><label>Catatan Minggu Ini (Ibu)</label><textarea id="self-note-ibu" placeholder="Refleksi, pencapaian, hal yang perlu diperbaiki..." style="min-height:70px"></textarea></div>
+        <button class="btn btn-primary btn-sm" id="btn-save-self-ibu">Simpan Evaluasi Ibu</button>
       </div>
     </div>
     <div class="sec-label">Riwayat Evaluasi Diri</div>
@@ -559,12 +553,12 @@ window._lt = setTimeout(function(){
   </div>
 
   <div class="bottom-nav">
-    <div class="nav-item active" data-page="home"><div class="nav-icon">🏠</div><div>Beranda</div></div>
-    <div class="nav-item" data-page="anak"><div class="nav-icon">👦</div><div>Anak</div></div>
-    <div class="nav-item" data-page="tim"><div class="nav-icon">👫</div><div>Tim</div></div>
-    <div class="nav-item" data-page="kalender"><div class="nav-icon">📅</div><div>Kalender</div></div>
-    <div class="nav-item" data-page="saya"><div class="nav-icon">🪞</div><div>Saya</div></div>
-    <div class="nav-item" data-page="laporan"><div class="nav-icon">📊</div><div>Laporan</div></div>
+    <div class="nav-item active" data-page="home"><div class="nav-icon">&#127968;</div><div>Beranda</div></div>
+    <div class="nav-item" data-page="anak"><div class="nav-icon">&#128102;</div><div>Anak</div></div>
+    <div class="nav-item" data-page="tim"><div class="nav-icon">&#128107;</div><div>Tim</div></div>
+    <div class="nav-item" data-page="kalender"><div class="nav-icon">&#128197;</div><div>Kalender</div></div>
+    <div class="nav-item" data-page="saya"><div class="nav-icon">&#129706;</div><div>Saya</div></div>
+    <div class="nav-item" data-page="laporan"><div class="nav-icon">&#128202;</div><div>Laporan</div></div>
   </div>
 </div>
 
@@ -832,41 +826,8 @@ document.addEventListener('DOMContentLoaded', function(){
     el.addEventListener('click', function(){
       document.querySelectorAll('.eval-status-chip').forEach(function(c){ c.className='eval-status-chip'; });
       this.classList.add('sel-'+this.dataset.status);
+      this._selected = true;
     });
-  });
-
-  // Kalender
-  var addEvBtn = document.getElementById('btn-add-event');
-  if(addEvBtn) addEvBtn.addEventListener('click', openAddEventModal);
-  var addItinBtn = document.getElementById('btn-add-itin-day');
-  if(addItinBtn) addItinBtn.addEventListener('click', addItinDay);
-  var saveEvBtn = document.getElementById('btn-save-event');
-  if(saveEvBtn) saveEvBtn.addEventListener('click', saveEvent);
-  var delEvBtn = document.getElementById('btn-delete-event');
-  if(delEvBtn) delEvBtn.addEventListener('click', async function(){
-    if(!currentEventId||!confirm('Hapus event ini?')) return;
-    try{ await deleteDoc(doc(db,'events',currentEventId)); closeModal('modal-event-detail'); T('Event dihapus','success'); loadEventList(); }catch(e){ T('Gagal','error'); }
-  });
-
-  // Event type change
-  var evType = document.getElementById('ev-type');
-  if(evType) evType.addEventListener('change', onEventTypeChange);
-
-  // Self eval
-  var btnSelfAyah = document.getElementById('btn-save-self-ayah');
-  if(btnSelfAyah) btnSelfAyah.addEventListener('click', function(){ saveSelfEval('ayah'); });
-  var btnSelfIbu = document.getElementById('btn-save-self-ibu');
-  if(btnSelfIbu) btnSelfIbu.addEventListener('click', function(){ saveSelfEval('ibu'); });
-  var btnAddDimAyah = document.getElementById('btn-add-dim-ayah');
-  if(btnAddDimAyah) btnAddDimAyah.addEventListener('click', function(){ currentDimRole='ayah'; document.getElementById('new-dim-name').value=''; document.getElementById('new-dim-desc').value=''; document.getElementById('new-dim-icon').value=''; document.getElementById('modal-add-dim-title').textContent='+ Dimensi Ayah'; openModal('modal-add-dim'); });
-  var btnAddDimIbu = document.getElementById('btn-add-dim-ibu');
-  if(btnAddDimIbu) btnAddDimIbu.addEventListener('click', function(){ currentDimRole='ibu'; document.getElementById('new-dim-name').value=''; document.getElementById('new-dim-desc').value=''; document.getElementById('new-dim-icon').value=''; document.getElementById('modal-add-dim-title').textContent='+ Dimensi Ibu'; openModal('modal-add-dim'); });
-  var btnSaveDim = document.getElementById('btn-save-dim');
-  if(btnSaveDim) btnSaveDim.addEventListener('click', async function(){
-    const name = document.getElementById('new-dim-name').value.trim();
-    if(!name) return T('Isi nama dimensi','error');
-    selfDims[currentDimRole].push({id:'dc'+Date.now(), icon:document.getElementById('new-dim-icon').value||'✓', name, desc:document.getElementById('new-dim-desc').value.trim()});
-    await saveSelfDims(); renderSelfDims(currentDimRole); closeModal('modal-add-dim'); T('Dimensi ditambahkan','success');
   });
 });
 
@@ -929,7 +890,6 @@ async function initApp(user, profileOverride=null){
   await loadRmState();
   renderHome();
   updateLaporan();
-  loadSelfDims();
   T('Selamat datang, '+p.name+'!','success');
 }
 
@@ -948,9 +908,7 @@ function setupUI(p){
   const days=['Ahad','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
   const months=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
   const now=new Date();
-  // Store this user's name, load partner name from family
   $('g-name').textContent="Assalamu'alaikum, "+p.name+" \uD83D\uDC4B";
-  loadPartnerGreeting(p);
   $('g-date').textContent=days[now.getDay()]+', '+now.getDate()+' '+months[now.getMonth()]+' '+now.getFullYear();
   if(now.getDay()===0) $('sunday-alert').style.display='flex';
   $('ci-week').textContent='Minggu: '+getWeekLabel();
@@ -967,8 +925,10 @@ function showPage(page){
   if(page==='anak'&&!CK) openChild('fakhrur');
   if(page==='laporan') updateLaporan();
   if(page==='tim') loadMusyawarahList();
-  if(page==='kalender') loadEventList();
-  if(page==='saya'){ loadSelfDims(); loadSelfEvalHistory(); }
+  if(page==='kalender'){ if(typeof loadEventList==='function') loadEventList(); }
+  if(page==='saya'){ if(typeof loadSelfDims==='function'){ loadSelfDims(); loadSelfEvalHistory(); } }
+  if(page==='kalender') { if(typeof loadEventList==='function') loadEventList(); }
+  if(page==='saya'){ if(typeof loadSelfDims==='function'){ loadSelfDims(); loadSelfEvalHistory(); } }
 }
 
 function openChild(cid){
@@ -1386,15 +1346,8 @@ async function loadMusyawarahList(){
   if(!CU) return;
   const el=$('musyawarah-list'); if(!el) return; el.innerHTML='';
   try{
-    let snap;
-    try{
-      const q=query(collection(db,'musyawarah'),where('familyCode','==',CU.profile.familyCode),orderBy('date','desc'));
-      snap=await getDocs(q);
-    }catch(e){
-      // Fallback without orderBy if index not ready
-      const q2=query(collection(db,'musyawarah'),where('familyCode','==',CU.profile.familyCode));
-      snap=await getDocs(q2);
-    }
+    const q=query(collection(db,'musyawarah'),where('familyCode','==',CU.profile.familyCode),orderBy('date','desc'));
+    const snap=await getDocs(q);
     if(snap.empty){ el.innerHTML='<div class="empty-state"><div class="empty-icon">\uD83C\uDF19</div><div class="empty-text">Belum ada musyawarah tercatat.</div></div>'; return; }
     snap.forEach(function(d){
       const data=d.data(); const dt=new Date(data.date);
@@ -1714,8 +1667,9 @@ function onEventTypeChange(){
 }
 
 function openAddEventModal(){
-  editingEventId = null;
-  document.getElementById('modal-event-title').textContent = '📅 Tambah Event';
+  editingEventId = window._editingEventId||null;
+  window._editingEventId=null;
+  document.getElementById('modal-event-title').textContent = editingEventId ? 'Edit Event' : 'Tambah Event';
   document.getElementById('ev-type').value = 'rekreasi';
   document.getElementById('ev-title').value = '';
   document.getElementById('ev-start').value = '';
@@ -1859,6 +1813,8 @@ async function loadEventList(){
 
 function showEventDetail(docId, data){
   currentEventId = docId;
+  window._currentEventId = docId;
+  window._currentEventData = data;
   document.getElementById('ev-detail-title').textContent = data.typeIcon+' '+data.title;
   const el = document.getElementById('ev-detail-content'); el.innerHTML='';
 
@@ -1901,27 +1857,26 @@ function showEventDetail(docId, data){
 }
 
 
-// UTILS
-async function loadPartnerGreeting(myProfile){
-  if(!CU) return;
-  try{
-    // Find partner in same family
-    const q = query(collection(db,'users_family'),where('familyCode','==',myProfile.familyCode));
-    const snap = await getDocs(q);
-    let partnerName = '';
-    snap.forEach(function(d){
-      const data = d.data();
-      if(data.uid !== CU.uid && data.name) partnerName = data.name;
-    });
-    // Also try saving this user to users_family
-    await setDoc(doc(db,'users_family',CU.uid),{uid:CU.uid,name:myProfile.name,role:myProfile.role,familyCode:myProfile.familyCode},{merge:true});
-    if(partnerName){
-      const isAyah = myProfile.role==='ayah';
-      $('g-name').textContent="Assalamu'alaikum, "+myProfile.name+" & "+partnerName+" \uD83D\uDC4B";
-    }
-  }catch(e){ console.warn('partner greeting:', e); }
-}
 
+window.deleteEventById = async function(docId){
+  try{ await deleteDoc(doc(db,'events',docId)); closeModal('modal-event-detail'); T('Event dihapus','success'); loadEventList(); }catch(e){ T('Gagal hapus event','error'); }
+};
+window.addSelfDim = async function(role, name){
+  var icon = document.getElementById('new-dim-icon').value||'*';
+  var desc = document.getElementById('new-dim-desc').value.trim();
+  selfDims[role].push({id:'dc'+Date.now(), icon:icon, name:name, desc:desc});
+  await saveSelfDims();
+  renderSelfDims(role);
+  if(typeof closeModal==='function') closeModal('modal-add-dim');
+  if(typeof T==='function') T('Dimensi ditambahkan','success');
+};
+window.editEvent = function(docId, data){
+  if(typeof openAddEventModal==='function'){
+    window._editingEventId = docId;
+    openAddEventModal(data);
+  }
+};
+// UTILS
 function getWeekLabel(){
   const now=new Date(), start=new Date(now.getFullYear(),0,1);
   const wk=Math.ceil(((now-start)/86400000+start.getDay()+1)/7);
@@ -1933,17 +1888,17 @@ function getWeekLabel(){
 <!-- MODAL EVENT -->
 <div class="modal-overlay" id="modal-event">
   <div class="modal">
-    <div class="modal-hdr"><div class="modal-title" id="modal-event-title">📅 Tambah Event</div><div class="modal-close" data-close="modal-event">✕</div></div>
+    <div class="modal-hdr"><div class="modal-title" id="modal-event-title">Tambah Event</div><div class="modal-close" data-close="modal-event">X</div></div>
     <div class="fg"><label>Jenis Event</label>
-      <select id="ev-type" onchange="onEventTypeChange()">
-        <option value="rekreasi">🏖️ Rekreasi / Liburan</option>
-        <option value="pondok">🕌 Kunjungan ke Pondok</option>
-        <option value="les">📚 Les / Kursus Anak</option>
-        <option value="kesehatan">🏥 Kesehatan / Dokter</option>
-        <option value="ulang-tahun">🎂 Ulang Tahun & Momen Keluarga</option>
-        <option value="milestone">📋 Milestone Penting</option>
-        <option value="sekolah">🤝 Pertemuan Sekolah / Pondok</option>
-        <option value="custom">✏️ Event Lainnya (Custom)</option>
+      <select id="ev-type">
+        <option value="rekreasi">Rekreasi / Liburan</option>
+        <option value="pondok">Kunjungan ke Pondok</option>
+        <option value="les">Les / Kursus Anak</option>
+        <option value="kesehatan">Kesehatan / Dokter</option>
+        <option value="ulang-tahun">Ulang Tahun &amp; Momen Keluarga</option>
+        <option value="milestone">Milestone Penting</option>
+        <option value="sekolah">Pertemuan Sekolah / Pondok</option>
+        <option value="custom">Event Lainnya (Custom)</option>
       </select>
     </div>
     <div class="fg" id="ev-custom-name-wrap" style="display:none"><label>Nama Event</label><input type="text" id="ev-custom-name" placeholder="Nama event Anda..."></div>
@@ -1955,30 +1910,27 @@ function getWeekLabel(){
     <div class="fg"><label>Peserta</label>
       <div class="chip-group">
         <div class="chip" data-group="ev-peserta">Seluruh Keluarga</div>
-        <div class="chip" data-group="ev-peserta">Ayah & Fakhrur</div>
-        <div class="chip" data-group="ev-peserta">Ayah & Faqih</div>
-        <div class="chip" data-group="ev-peserta">Ayah & Fathan</div>
-        <div class="chip" data-group="ev-peserta">Ayah & Ibu</div>
-        <div class="chip" data-group="ev-peserta">Custom</div>
+        <div class="chip" data-group="ev-peserta">Ayah &amp; Fakhrur</div>
+        <div class="chip" data-group="ev-peserta">Ayah &amp; Faqih</div>
+        <div class="chip" data-group="ev-peserta">Ayah &amp; Fathan</div>
+        <div class="chip" data-group="ev-peserta">Ayah &amp; Ibu</div>
       </div>
     </div>
     <div class="fg"><label>Status</label>
       <select id="ev-status">
-        <option value="rencana">📝 Rencana</option>
-        <option value="dikonfirmasi">✅ Dikonfirmasi</option>
-        <option value="selesai">🎉 Selesai</option>
-        <option value="dibatalkan">❌ Dibatalkan</option>
+        <option value="rencana">Rencana</option>
+        <option value="dikonfirmasi">Dikonfirmasi</option>
+        <option value="selesai">Selesai</option>
+        <option value="dibatalkan">Dibatalkan</option>
       </select>
     </div>
     <div class="fg"><label>Catatan Umum</label><textarea id="ev-note" placeholder="Detail, catatan, hal yang perlu disiapkan..."></textarea></div>
     <div class="fg"><label>Anggaran</label><input type="text" id="ev-budget" placeholder="Contoh: Rp 5.000.000"></div>
-
-    <!-- ITINERARY - hanya untuk rekreasi -->
     <div id="itinerary-section" style="display:none">
-      <div class="sec-label" style="margin-top:4px">🗓️ Itinerary Lengkap</div>
+      <div class="sec-label" style="margin-top:4px">Itinerary Lengkap</div>
       <div class="fg"><label>Destinasi Utama</label><input type="text" id="ev-destinasi" placeholder="Contoh: Yogyakarta, Bali, dll"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="fg"><label>Transportasi</label><select id="ev-transport"><option>🚗 Mobil Pribadi</option><option>✈️ Pesawat</option><option>🚆 Kereta</option><option>🚌 Bus</option><option>⛵ Kapal</option></select></div>
+        <div class="fg"><label>Transportasi</label><select id="ev-transport"><option>Mobil Pribadi</option><option>Pesawat</option><option>Kereta</option><option>Bus</option><option>Kapal</option></select></div>
         <div class="fg"><label>Akomodasi</label><input type="text" id="ev-hotel" placeholder="Nama hotel/penginapan"></div>
       </div>
       <div style="background:var(--bg);border-radius:var(--rs);padding:14px;border:1px solid var(--border)">
@@ -1986,12 +1938,11 @@ function getWeekLabel(){
         <div id="itin-days-list"></div>
         <button class="btn btn-teal btn-sm" id="btn-add-itin-day" style="margin-top:10px">+ Tambah Hari</button>
       </div>
-      <div class="fg" style="margin-top:14px"><label>Tips & Catatan Perjalanan</label><textarea id="ev-tips" placeholder="Tips, hal penting, nomor darurat, dll..."></textarea></div>
+      <div class="fg" style="margin-top:14px"><label>Tips &amp; Catatan Perjalanan</label><textarea id="ev-tips" placeholder="Tips, hal penting, nomor darurat, dll..."></textarea></div>
     </div>
-
     <div class="modal-footer">
       <button class="btn btn-outline" data-close="modal-event">Batal</button>
-      <button class="btn btn-primary" id="btn-save-event">💾 Simpan Event</button>
+      <button class="btn btn-primary" id="btn-save-event">Simpan Event</button>
     </div>
   </div>
 </div>
@@ -1999,10 +1950,11 @@ function getWeekLabel(){
 <!-- MODAL EVENT DETAIL -->
 <div class="modal-overlay" id="modal-event-detail">
   <div class="modal">
-    <div class="modal-hdr"><div class="modal-title" id="ev-detail-title">Detail Event</div><div class="modal-close" data-close="modal-event-detail">✕</div></div>
+    <div class="modal-hdr"><div class="modal-title" id="ev-detail-title">Detail Event</div><div class="modal-close" data-close="modal-event-detail">X</div></div>
     <div id="ev-detail-content"></div>
     <div class="modal-footer">
-      <button class="btn btn-danger btn-sm" id="btn-delete-event">Hapus Event</button>
+      <button class="btn btn-danger btn-sm" id="btn-delete-event">Hapus</button>
+      <button class="btn btn-primary btn-sm" id="btn-edit-event">Edit Event</button>
       <button class="btn btn-outline" data-close="modal-event-detail">Tutup</button>
     </div>
   </div>
@@ -2011,16 +1963,94 @@ function getWeekLabel(){
 <!-- MODAL ADD DIM -->
 <div class="modal-overlay" id="modal-add-dim">
   <div class="modal">
-    <div class="modal-hdr"><div class="modal-title" id="modal-add-dim-title">+ Tambah Dimensi</div><div class="modal-close" data-close="modal-add-dim">✕</div></div>
-    <div class="fg"><label>Nama Dimensi / Checklist</label><input type="text" id="new-dim-name" placeholder="Contoh: Imam Sholat Berjamaah"></div>
+    <div class="modal-hdr"><div class="modal-title" id="modal-add-dim-title">+ Tambah Dimensi</div><div class="modal-close" data-close="modal-add-dim">X</div></div>
+    <div class="fg"><label>Nama Dimensi</label><input type="text" id="new-dim-name" placeholder="Contoh: Imam Sholat Berjamaah"></div>
     <div class="fg"><label>Deskripsi / Target</label><input type="text" id="new-dim-desc" placeholder="Contoh: Minimal 3x seminggu menjadi imam"></div>
-    <div class="fg"><label>Ikon (emoji)</label><input type="text" id="new-dim-icon" placeholder="Contoh: 🕌" maxlength="4"></div>
+    <div class="fg"><label>Ikon (emoji)</label><input type="text" id="new-dim-icon" placeholder="Contoh: ketik bintang atau hati" maxlength="4"></div>
     <div class="modal-footer">
       <button class="btn btn-outline" data-close="modal-add-dim">Batal</button>
       <button class="btn btn-primary" id="btn-save-dim">Tambah</button>
     </div>
   </div>
 </div>
+
+<script>
+// Extra wiring for new features
+document.addEventListener('DOMContentLoaded', function(){
+  // Event type change
+  var evType = document.getElementById('ev-type');
+  if(evType) evType.addEventListener('change', function(){
+    var type = this.value;
+    var cw = document.getElementById('ev-custom-name-wrap');
+    var it = document.getElementById('itinerary-section');
+    if(cw) cw.style.display = type==='custom'?'':'none';
+    if(it) it.style.display = type==='rekreasi'?'':'none';
+  });
+  // Add event
+  var btnAddEv = document.getElementById('btn-add-event');
+  if(btnAddEv) btnAddEv.addEventListener('click', function(){ if(typeof openAddEventModal==='function') openAddEventModal(); });
+  // Save event
+  var btnSaveEv = document.getElementById('btn-save-event');
+  if(btnSaveEv) btnSaveEv.addEventListener('click', function(){ if(typeof saveEvent==='function') saveEvent(); });
+  // Add itin day
+  var btnItinDay = document.getElementById('btn-add-itin-day');
+  if(btnItinDay) btnItinDay.addEventListener('click', function(){ if(typeof addItinDay==='function') addItinDay(); });
+  // Delete event
+  var btnDelEv = document.getElementById('btn-delete-event');
+  if(btnDelEv) btnDelEv.addEventListener('click', function(){
+    if(!currentEventId||!confirm('Hapus event ini?')) return;
+    // handled by module
+  });
+  // Edit event
+  var btnEditEv = document.getElementById('btn-edit-event');
+  if(btnEditEv) btnEditEv.addEventListener('click', function(){
+    if(currentEventId && window._currentEventData && typeof editEvent==='function') editEvent(currentEventId, window._currentEventData);
+  });
+  // Self eval
+  var btnSelfA = document.getElementById('btn-save-self-ayah');
+  if(btnSelfA) btnSelfA.addEventListener('click', function(){ if(typeof saveSelfEval==='function') saveSelfEval('ayah'); });
+  var btnSelfI = document.getElementById('btn-save-self-ibu');
+  if(btnSelfI) btnSelfI.addEventListener('click', function(){ if(typeof saveSelfEval==='function') saveSelfEval('ibu'); });
+  // Add dim
+  var btnAddDA = document.getElementById('btn-add-dim-ayah');
+  if(btnAddDA) btnAddDA.addEventListener('click', function(){
+    window._currentDimRole='ayah';
+    document.getElementById('new-dim-name').value='';
+    document.getElementById('new-dim-desc').value='';
+    document.getElementById('new-dim-icon').value='';
+    if(typeof openModal==='function') openModal('modal-add-dim');
+  });
+  var btnAddDI = document.getElementById('btn-add-dim-ibu');
+  if(btnAddDI) btnAddDI.addEventListener('click', function(){
+    window._currentDimRole='ibu';
+    document.getElementById('new-dim-name').value='';
+    document.getElementById('new-dim-desc').value='';
+    document.getElementById('new-dim-icon').value='';
+    if(typeof openModal==='function') openModal('modal-add-dim');
+  });
+  var btnSaveDim = document.getElementById('btn-save-dim');
+  if(btnSaveDim) btnSaveDim.addEventListener('click', function(){
+    var name = document.getElementById('new-dim-name').value.trim();
+    if(!name){ alert('Isi nama dimensi'); return; }
+    if(typeof addSelfDim==='function') addSelfDim(window._currentDimRole||'ayah', name);
+  });
+  // Modal close
+  document.querySelectorAll('[data-close]').forEach(function(el){
+    el.addEventListener('click', function(){ if(typeof closeModal==='function') closeModal(this.dataset.close); });
+  });
+  document.querySelectorAll('.modal-overlay').forEach(function(o){
+    o.addEventListener('click', function(e){ if(e.target===o) o.classList.remove('open'); });
+  });
+  // Chips
+  document.querySelectorAll('.chip[data-group]').forEach(function(el){
+    el.addEventListener('click', function(){
+      var g=this.dataset.group;
+      document.querySelectorAll('.chip[data-group="'+g+'"]').forEach(function(c){ c.classList.remove('selected'); });
+      this.classList.add('selected');
+    });
+  });
+});
+</script>
 
 </body>
 </html>
