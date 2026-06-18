@@ -607,9 +607,15 @@ window._lt = setTimeout(function(){
 <div class="modal-overlay" id="modal-edit-child">
   <div class="modal">
     <div class="modal-hdr"><div class="modal-title" id="edit-child-title">✏️ Edit Anak</div><div class="modal-close" data-close="modal-edit-child">✕</div></div>
-    <div class="sec-label" style="margin-top:0">Visi & Target</div>
+        <div class="sec-label" style="margin-top:0">Profil Anak</div>
+    <div class="fg"><label>Nama</label><input type="text" id="ec-name" placeholder="Nama anak"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fg"><label>Usia</label><input type="text" id="ec-age" placeholder="Contoh: 15 tahun"></div>
+      <div class="fg"><label>Status / Sekolah</label><input type="text" id="ec-status" placeholder="Contoh: SMA Pondok Modern"></div>
+    </div>
+    <div class="sec-label">Visi & Target Besar</div>
     <div class="fg"><textarea id="ec-vision" placeholder="Target besar yang ingin dicapai..."></textarea></div>
-    <button class="btn btn-primary btn-sm" id="btn-save-vision" style="margin-bottom:20px">💾 Simpan Visi</button>
+    <button class="btn btn-primary btn-sm" id="btn-save-vision" style="margin-bottom:20px">Simpan Profil & Visi</button>
     <div class="sec-label">Kelola Fase</div>
     <div id="ec-phase-list" style="margin-bottom:14px"></div>
     <div style="background:var(--bg);border-radius:var(--rs);padding:14px;margin-bottom:20px;border:1px solid var(--border)">
@@ -947,6 +953,9 @@ async function loadCustomData() {
       Object.keys(d).forEach(function(cid) {
         if (!childrenData[cid]) return;
         if (d[cid].vision) childrenData[cid].vision = d[cid].vision;
+        if (d[cid].name) childrenData[cid].name = d[cid].name;
+        if (d[cid].age) childrenData[cid].age = d[cid].age;
+        if (d[cid].status) childrenData[cid].status = d[cid].status;
         if (d[cid].phases) {
           d[cid].phases.forEach(function(cp) {
             const ex = childrenData[cid].phases.find(function(p){ return p.id === cp.id; });
@@ -974,7 +983,13 @@ async function saveCustomData() {
   ['fakhrur','faqih','fathan'].forEach(function(cid) {
     const def = defaultChildren[cid];
     const cur = childrenData[cid];
-    d[cid] = {vision: cur.vision, phases: []};
+    d[cid] = {
+      vision: cur.vision,
+      name: cur.name,
+      age: cur.age,
+      status: cur.status,
+      phases: []
+    };
     cur.phases.forEach(function(phase) {
       const defP = def.phases.find(function(p){ return p.id === phase.id; });
       const defIds = defP ? defP.items.map(function(i){ return i.id; }) : [];
@@ -1185,6 +1200,9 @@ function openEditChildModal() {
   if (!CK) return;
   const c = childrenData[CK];
   ge('edit-child-title').textContent = 'Edit ' + c.name;
+  ge('ec-name').value = c.name;
+  ge('ec-age').value = c.age;
+  ge('ec-status').value = c.status;
   ge('ec-vision').value = c.vision;
   renderPhaseEditList(); updatePhaseSelect();
   openModal('modal-edit-child');
@@ -1217,10 +1235,23 @@ function updatePhaseSelect() {
 }
 async function saveChildVision() {
   if (!CK) return;
-  const v = ge('ec-vision').value.trim();
-  if (v) childrenData[CK].vision = v;
+  const name = ge('ec-name').value.trim();
+  const age = ge('ec-age').value.trim();
+  const status = ge('ec-status').value.trim();
+  const vision = ge('ec-vision').value.trim();
+  if (name) childrenData[CK].name = name;
+  if (age) childrenData[CK].age = age;
+  if (status) childrenData[CK].status = status;
+  if (vision) childrenData[CK].vision = vision;
+  // Update hero display
+  ge('ch-name').textContent = childrenData[CK].emoji + ' ' + childrenData[CK].name;
+  ge('ch-meta').textContent = childrenData[CK].age + ' - ' + childrenData[CK].status;
   ge('ch-vision').textContent = childrenData[CK].vision;
-  await saveCustomData(); T('Visi disimpan', 'success');
+  // Update modal title
+  ge('edit-child-title').textContent = 'Edit ' + childrenData[CK].name;
+  await saveCustomData();
+  renderHome();
+  T('Profil & visi disimpan', 'success');
 }
 async function addNewPhase() {
   if (!CK) return;
