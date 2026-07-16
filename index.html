@@ -1699,11 +1699,16 @@ function openAddEventModal(existingData) {
     ge('ev-hotel').value = it.hotel||'';
     ge('ev-tips').value = it.tips||'';
     itinDays = JSON.parse(JSON.stringify(it.days||[]));
+    calRangeStart = it.rangeStart||null;
+    calRangeEnd = it.rangeEnd||null;
   } else {
     ge('ev-hotel').value=''; ge('ev-tips').value=''; itinDays=[];
+    calRangeStart=null; calRangeEnd=null;
   }
   renderItinDays();
   onEventTypeChange(); // this will render category fields
+  // Init calendar
+  setTimeout(function(){ if(typeof initCalendar==='function') initCalendar(); }, 50);
   // Restore category field values after render
   if (existingData && existingData.itinerary && existingData.itinerary.categoryData) {
     setTimeout(function(){
@@ -1834,29 +1839,56 @@ window.addItinDay = addItinDay;
 
 function renderItinDays() {
   const el = ge('itin-days-list'); el.innerHTML='';
+  if (!itinDays || itinDays.length === 0) return;
   itinDays.forEach(function(day, idx) {
-    const div = document.createElement('div'); div.style.cssText='background:#fff;border:1px solid var(--border);border-radius:var(--rx);padding:12px;margin-bottom:10px';
-    const hdr = document.createElement('div'); hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px';
-    const t = document.createElement('div'); t.style.cssText='font-size:13px;font-weight:800'; t.textContent='Hari ke-'+day.day;
-    const d2 = document.createElement('span'); d2.className='del-btn'; d2.textContent='Hapus hari';
-    d2.addEventListener('click', function(){ itinDays.splice(idx,1); itinDays.forEach(function(d3,i){ d3.day=i+1; }); renderItinDays(); });
-    hdr.appendChild(t); hdr.appendChild(d2); div.appendChild(hdr);
-    const di = document.createElement('input'); di.type='date'; di.style.cssText='width:100%;font-size:12px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--rx);background:var(--bg);margin-bottom:8px;font-family:inherit'; di.value=day.tanggal;
-    di.addEventListener('change', function(){ day.tanggal=this.value; }); div.appendChild(di);
+    const div = document.createElement('div');
+    div.style.cssText='background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:0;margin-bottom:10px;overflow:hidden;box-shadow:var(--sh)';
+    
+    // Day header - elegant with gold accent
+    const hdr = document.createElement('div');
+    hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:linear-gradient(135deg,var(--gold-d),rgba(255,255,255,0));border-bottom:1px solid var(--border)';
+    const dayInfo = document.createElement('div');
+    const dayTitle = document.createElement('div');
+    dayTitle.style.cssText='font-size:13px;font-weight:800;color:var(--gold)';
+    dayTitle.textContent='Hari ' + day.day + (day.tanggalLabel ? ' — ' + day.tanggalLabel : '');
+    dayInfo.appendChild(dayTitle);
+    if (day.tanggal && !day.tanggalLabel) {
+      const dayDate = document.createElement('div');
+      dayDate.style.cssText='font-size:11px;color:var(--muted);margin-top:2px';
+      dayDate.textContent = day.tanggal;
+      dayInfo.appendChild(dayDate);
+    }
+    hdr.appendChild(dayInfo);
+    div.appendChild(hdr);
+
+    // Body
+    const body = document.createElement('div'); body.style.padding='12px 14px';
+
+    // Activities list
     day.aktivitas.forEach(function(akt, ai) {
-      const ar=document.createElement('div'); ar.style.cssText='display:flex;gap:6px;margin-bottom:6px;align-items:center';
-      const inp=document.createElement('input'); inp.type='text'; inp.style.cssText='flex:1;font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--rx);background:var(--bg);font-family:inherit';
-      inp.placeholder='Contoh: 08.00 - Sarapan di hotel'; inp.value=akt;
-      inp.addEventListener('change', function(){ day.aktivitas[ai]=this.value; });
+      const ar=document.createElement('div'); ar.style.cssText='display:flex;gap:6px;margin-bottom:8px;align-items:center';
+      const timeInp=document.createElement('input'); timeInp.type='text'; timeInp.style.cssText='width:70px;font-size:12px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--rx);background:var(--bg);font-family:inherit;text-align:center;flex-shrink:0';
+      timeInp.placeholder='08.00'; timeInp.value=akt.split(' - ')[0]||'';
+      const actInp=document.createElement('input'); actInp.type='text'; actInp.style.cssText='flex:1;font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--rx);background:var(--bg);font-family:inherit';
+      actInp.placeholder='Aktivitas...'; actInp.value=akt.includes(' - ')?akt.split(' - ').slice(1).join(' - '):akt;
+      function updateAkt(){ day.aktivitas[ai]=timeInp.value+(timeInp.value?' - ':'')+actInp.value; }
+      timeInp.addEventListener('change', updateAkt); actInp.addEventListener('change', updateAkt);
       const da=document.createElement('span'); da.className='del-btn'; da.textContent='x';
       da.addEventListener('click', function(){ day.aktivitas.splice(ai,1); renderItinDays(); });
-      ar.appendChild(inp); ar.appendChild(da); div.appendChild(ar);
+      ar.appendChild(timeInp); ar.appendChild(actInp); ar.appendChild(da); body.appendChild(ar);
     });
-    const aa=document.createElement('button'); aa.className='btn btn-ghost btn-xs'; aa.textContent='+ Aktivitas';
-    aa.addEventListener('click', function(){ day.aktivitas.push(''); renderItinDays(); }); div.appendChild(aa);
-    const nt=document.createElement('textarea'); nt.style.cssText='width:100%;font-size:11px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--rx);background:var(--bg);margin-top:8px;resize:vertical;min-height:50px;font-family:inherit';
-    nt.placeholder='Catatan hari ini...'; nt.value=day.catatan;
-    nt.addEventListener('change', function(){ day.catatan=this.value; }); div.appendChild(nt);
+
+    // Add activity button
+    const aa=document.createElement('button'); aa.className='btn btn-ghost btn-xs'; aa.style.cssText='width:auto;padding:6px 12px;font-size:11px;margin-bottom:8px';
+    aa.textContent='+ Tambah Aktivitas';
+    aa.addEventListener('click', function(){ day.aktivitas.push(''); renderItinDays(); }); body.appendChild(aa);
+
+    // Notes
+    const nt=document.createElement('textarea'); nt.style.cssText='width:100%;font-size:12px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--rx);background:var(--bg);margin-top:4px;resize:vertical;min-height:50px;font-family:inherit;color:var(--text)';
+    nt.placeholder='Catatan hari ini (opsional)...'; nt.value=day.catatan||'';
+    nt.addEventListener('change', function(){ day.catatan=this.value; }); body.appendChild(nt);
+
+    div.appendChild(body);
     el.appendChild(div);
   });
 }
@@ -2191,6 +2223,213 @@ async function updateLaporan() {
     if(!lcEl.children.length) lcEl.innerHTML='<div class="empty-state"><div class="empty-text">Belum ada check-in.</div></div>';
   } catch(e) {}
 }
+
+
+// ========== CALENDAR RANGE PICKER ==========
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+let calRangeStart = null;
+let calRangeEnd = null;
+let calSelecting = false; // true = first click done, waiting for end
+
+const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const DAYS_ID = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
+
+function initCalendar() {
+  const now = new Date();
+  calYear = now.getFullYear();
+  calMonth = now.getMonth();
+  calRangeStart = null;
+  calRangeEnd = null;
+  calSelecting = false;
+  renderCalendar();
+  // Wire prev/next buttons
+  const prev = document.getElementById('cal-prev');
+  const next = document.getElementById('cal-next');
+  if (prev) { prev.onclick = function(e){ e.stopPropagation(); calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }; }
+  if (next) { next.onclick = function(e){ e.stopPropagation(); calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }; }
+}
+
+function renderCalendar() {
+  const label = document.getElementById('cal-month-label');
+  if (label) label.textContent = MONTHS_ID[calMonth] + ' ' + calYear;
+
+  const grid = document.getElementById('cal-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const firstDay = new Date(calYear, calMonth, 1);
+  // Monday-based: Monday=0, Sunday=6
+  let startOffset = firstDay.getDay() - 1;
+  if (startOffset < 0) startOffset = 6;
+
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+  // Empty cells before first day
+  for (let i = 0; i < startOffset; i++) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'height:36px';
+    grid.appendChild(empty);
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = calYear + '-' + String(calMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    const dayOfWeek = new Date(calYear, calMonth, d).getDay(); // 0=Sun, 6=Sat
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+    const cell = document.createElement('div');
+    cell.style.cssText = 'height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s;position:relative;';
+    cell.textContent = d;
+    cell.dataset.date = dateStr;
+
+    // Determine state
+    const isStart = calRangeStart === dateStr;
+    const isEnd = calRangeEnd === dateStr;
+    const isInRange = calRangeStart && calRangeEnd && dateStr > calRangeStart && dateStr < calRangeEnd;
+    const isToday = dateStr === new Date().toISOString().split('T')[0];
+
+    if (isStart || isEnd) {
+      cell.style.background = 'var(--gold)';
+      cell.style.color = '#fff';
+      cell.style.fontWeight = '800';
+      cell.style.boxShadow = '0 2px 8px rgba(184,134,11,.4)';
+    } else if (isInRange) {
+      cell.style.background = 'var(--gold-d)';
+      cell.style.color = 'var(--gold)';
+      cell.style.borderRadius = '0';
+      cell.style.fontWeight = '700';
+    } else if (isToday) {
+      cell.style.border = '2px solid var(--gold)';
+      cell.style.color = 'var(--gold)';
+      cell.style.fontWeight = '700';
+    } else {
+      cell.style.color = isWeekend ? 'var(--rose)' : 'var(--text)';
+    }
+
+    cell.addEventListener('mouseenter', function() {
+      if (!isStart && !isEnd && !isInRange) {
+        this.style.background = 'var(--bg2)';
+      }
+      // Preview range while selecting
+      if (calSelecting && calRangeStart && !calRangeEnd) {
+        const hoverDate = this.dataset.date;
+        highlightPreview(hoverDate);
+      }
+    });
+    cell.addEventListener('mouseleave', function() {
+      if (!isStart && !isEnd && !isInRange) {
+        this.style.background = '';
+      }
+    });
+
+    cell.addEventListener('click', function() {
+      const clicked = this.dataset.date;
+      if (!calSelecting || !calRangeStart) {
+        // First click - set start
+        calRangeStart = clicked;
+        calRangeEnd = null;
+        calSelecting = true;
+      } else {
+        // Second click - set end
+        if (clicked < calRangeStart) {
+          calRangeEnd = calRangeStart;
+          calRangeStart = clicked;
+        } else if (clicked === calRangeStart) {
+          calRangeStart = null;
+          calSelecting = false;
+        } else {
+          calRangeEnd = clicked;
+        }
+        calSelecting = false;
+        if (calRangeStart && calRangeEnd) {
+          generateDaysFromRange();
+        }
+      }
+      renderCalendar();
+      updateRangeInfo();
+    });
+
+    grid.appendChild(cell);
+  }
+}
+
+function highlightPreview(hoverDate) {
+  const grid = document.getElementById('cal-grid');
+  if (!grid) return;
+  const cells = grid.querySelectorAll('[data-date]');
+  cells.forEach(function(cell) {
+    const d = cell.dataset.date;
+    const start = calRangeStart;
+    const end = hoverDate > start ? hoverDate : start;
+    const realStart = hoverDate > start ? start : hoverDate;
+    if (d > realStart && d < end) {
+      cell.style.background = 'var(--gold-d)';
+      cell.style.borderRadius = '0';
+    }
+  });
+}
+
+function updateRangeInfo() {
+  const infoEl = document.getElementById('cal-range-info');
+  const textEl = document.getElementById('cal-range-text');
+  if (!infoEl || !textEl) return;
+
+  if (calRangeStart && calRangeEnd) {
+    infoEl.style.display = 'block';
+    const start = new Date(calRangeStart);
+    const end = new Date(calRangeEnd);
+    const diff = Math.round((end - start) / 86400000) + 1;
+    textEl.textContent = formatDateID(calRangeStart) + ' s.d. ' + formatDateID(calRangeEnd) + ' (' + diff + ' hari)';
+  } else if (calRangeStart && !calRangeEnd) {
+    infoEl.style.display = 'block';
+    textEl.textContent = 'Mulai: ' + formatDateID(calRangeStart) + ' — pilih tanggal akhir';
+  } else {
+    infoEl.style.display = 'none';
+  }
+}
+
+function formatDateID(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return DAYS_ID[(d.getDay()+6)%7] + ', ' + d.getDate() + ' ' + MONTHS_ID[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+window.clearCalRange = function() {
+  calRangeStart = null;
+  calRangeEnd = null;
+  calSelecting = false;
+  itinDays = [];
+  renderCalendar();
+  updateRangeInfo();
+  renderItinDays();
+};
+
+function generateDaysFromRange() {
+  if (!calRangeStart || !calRangeEnd) return;
+  const start = new Date(calRangeStart);
+  const end = new Date(calRangeEnd);
+  const newDays = [];
+  let current = new Date(start);
+  let dayNum = 1;
+
+  while (current <= end) {
+    const dateStr = current.toISOString().split('T')[0];
+    // Preserve existing activities if day already exists
+    const existing = itinDays.find(function(d) { return d.tanggal === dateStr; });
+    newDays.push({
+      day: dayNum,
+      tanggal: dateStr,
+      tanggalLabel: formatDateID(dateStr),
+      aktivitas: existing ? existing.aktivitas : [],
+      catatan: existing ? existing.catatan : ''
+    });
+    current.setDate(current.getDate() + 1);
+    dayNum++;
+  }
+  itinDays = newDays;
+  renderItinDays();
+}
+
 
 // ===== UTILS =====
 function getChildAge(cid) {
@@ -3043,10 +3282,36 @@ function openShareModal() {
         </div>
       </div>
 
-      <div style="background:var(--bg);border-radius:var(--rs);padding:14px;border:1px solid var(--border);margin-bottom:14px">
-        <div style="font-size:12px;font-weight:800;color:var(--muted);margin-bottom:10px">Jadwal Per Hari / Sesi</div>
-        <div id="itin-days-list"></div>
-        <button class="btn btn-teal btn-sm" id="btn-add-itin-day" style="margin-top:10px">+ Tambah Hari / Sesi</button>
+      <!-- CALENDAR RANGE PICKER -->
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Jadwal Per Hari</label>
+        <div id="itin-calendar-wrap" style="background:#fff;border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)">
+          <!-- Calendar Header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--gold);color:#fff">
+            <button id="cal-prev" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;font-family:inherit">&#8249;</button>
+            <div id="cal-month-label" style="font-size:15px;font-weight:800;letter-spacing:.3px"></div>
+            <button id="cal-next" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;font-family:inherit">&#8250;</button>
+          </div>
+          <!-- Day labels -->
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);background:var(--bg2);padding:6px 8px">
+            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--muted);padding:4px 0">Sen</div>
+            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--muted);padding:4px 0">Sel</div>
+            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--muted);padding:4px 0">Rab</div>
+            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--muted);padding:4px 0">Kam</div>
+            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--muted);padding:4px 0">Jum</div>
+            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--rose);padding:4px 0">Sab</div>
+            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--rose);padding:4px 0">Min</div>
+          </div>
+          <!-- Calendar grid -->
+          <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);padding:8px;gap:2px"></div>
+          <!-- Range info -->
+          <div id="cal-range-info" style="padding:10px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);display:none">
+            <span id="cal-range-text"></span>
+            <span onclick="clearCalRange()" style="color:var(--rose);cursor:pointer;font-weight:700;margin-left:10px">Hapus Range</span>
+          </div>
+        </div>
+        <!-- Schedule list per day -->
+        <div id="itin-days-list" style="margin-top:12px"></div>
       </div>
 
       <div class="fg"><label>Tips & Catatan Penting</label><textarea id="ev-tips" placeholder="Tips, hal penting, yang perlu disiapkan..."></textarea></div>
