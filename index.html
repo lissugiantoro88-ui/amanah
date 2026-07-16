@@ -2560,14 +2560,21 @@ function getWeekLabel(){
 }
 
 // ===== EVENT LISTENERS (DOMContentLoaded) =====
-document.addEventListener('DOMContentLoaded', function(){
+(function(){
+  // Safe element getter - never throws if element missing
+  function sg(id) {
+    var el = document.getElementById(id);
+    if (!el) { return { addEventListener: function(){}, style: {}, value: '', textContent: '', innerHTML: '' }; }
+    return el;
+  }
+
   // Auth
-  ge('btn-login').addEventListener('click', doLogin);
-  ge('btn-register').addEventListener('click', doRegister);
-  ge('btn-show-reg').addEventListener('click', function(){ ge('login-card').style.display='none'; ge('reg-card').style.display=''; });
-  ge('btn-show-login').addEventListener('click', function(){ ge('login-card').style.display=''; ge('reg-card').style.display='none'; });
-  ge('btn-demo').addEventListener('click', function(){ ge('login-email').value='demo@amanah.app'; ge('login-pass').value='amanah123'; doLogin(); });
-  ge('tb-av').addEventListener('click', doLogout);
+  sg('btn-login').addEventListener('click', doLogin);
+  sg('btn-register').addEventListener('click', doRegister);
+  sg('btn-show-reg').addEventListener('click', function(){ sg('login-card').style.display='none'; sg('reg-card').style.display=''; });
+  sg('btn-show-login').addEventListener('click', function(){ sg('login-card').style.display=''; sg('reg-card').style.display='none'; });
+  sg('btn-demo').addEventListener('click', function(){ sg('login-email').value='demo@amanah.app'; sg('login-pass').value='amanah123'; doLogin(); });
+  sg('tb-av').addEventListener('click', doLogout);
   // Nav
   document.querySelectorAll('.nav-item').forEach(function(el){ el.addEventListener('click', function(){ showPage(this.dataset.page); }); });
   // Tabs
@@ -2578,65 +2585,65 @@ document.addEventListener('DOMContentLoaded', function(){
   document.querySelectorAll('[data-close]').forEach(function(el){ el.addEventListener('click', function(){ closeModal(this.dataset.close); }); });
   document.querySelectorAll('.modal-overlay').forEach(function(o){ o.addEventListener('click', function(e){ if(e.target===o) o.classList.remove('open'); }); });
   // Also wire save-dim and add-itin-day which are in modals
-  var btnSaveDim2 = ge('btn-save-dim');
+  var btnSaveDim2 = sg('btn-save-dim');
   if(btnSaveDim2) btnSaveDim2.addEventListener('click', function(){ addSelfDim(currentDimRole); });
-  var btnAddItinDay2 = ge('btn-add-itin-day');
+  var btnAddItinDay2 = sg('btn-add-itin-day');
   if(btnAddItinDay2) btnAddItinDay2.addEventListener('click', addItinDay);
   // Quick actions home
-  ge('qa-checkin').addEventListener('click', function(){ openCheckinModal(null); });
-  ge('qa-koneksi').addEventListener('click', function(){ openKoneksiModal(null); });
-  ge('qa-musyawarah').addEventListener('click', function(){
+  sg('qa-checkin').addEventListener('click', function(){ openCheckinModal(null); });
+  sg('qa-koneksi').addEventListener('click', function(){ openKoneksiModal(null); });
+  sg('qa-musyawarah').addEventListener('click', function(){
     if (window._isParent === false) { T('Fitur ini hanya untuk Papa & Mama','error'); return; }
-    showPage('tim');
+    showPasg('tim');
   });
-  ge('qa-laporan').addEventListener('click', function(){ showPage('laporan'); });
+  sg('qa-laporan').addEventListener('click', function(){ showPasg('laporan'); });
   // Child page buttons
-  ge('btn-back-home').addEventListener('click', function(){ showPage('home'); });
-  ge('btn-checkin-child').addEventListener('click', function(){ openCheckinModal(CK); });
-  ge('btn-koneksi-child').addEventListener('click', function(){ openKoneksiModal(CK); });
-  ge('btn-edit-child').addEventListener('click', openEditChildModal);
+  sg('btn-back-home').addEventListener('click', function(){ showPasg('home'); });
+  sg('btn-checkin-child').addEventListener('click', function(){ openCheckinModal(CK); });
+  sg('btn-koneksi-child').addEventListener('click', function(){ openKoneksiModal(CK); });
+  sg('btn-edit-child').addEventListener('click', openEditChildModal);
   // Child edit modal
-  ge('btn-save-vision').addEventListener('click', saveChildVision);
-  ge('btn-add-phase').addEventListener('click', addNewPhase);
-  ge('btn-add-item').addEventListener('click', addRoadmapItem);
+  sg('btn-save-vision').addEventListener('click', saveChildVision);
+  sg('btn-add-phase').addEventListener('click', addNewPhase);
+  sg('btn-add-item').addEventListener('click', addRoadmapItem);
   // Checkin
-  ge('btn-save-checkin').addEventListener('click', saveCheckin);
+  sg('btn-save-checkin').addEventListener('click', saveCheckin);
   // Koneksi
-  ge('btn-save-koneksi').addEventListener('click', saveKoneksi);
+  sg('btn-save-koneksi').addEventListener('click', saveKoneksi);
   // Musyawarah
-  ge('btn-save-musyawarah').addEventListener('click', saveMusyawarah);
+  sg('btn-save-musyawarah').addEventListener('click', saveMusyawarah);
   // Eval
-  ge('btn-save-eval').addEventListener('click', saveEval);
+  sg('btn-save-eval').addEventListener('click', saveEval);
   document.querySelectorAll('.eval-status-chip').forEach(function(el){ el.addEventListener('click', function(){ document.querySelectorAll('.eval-status-chip').forEach(function(c){ c.className='eval-status-chip'; }); this.classList.add('sel-'+this.dataset.status); }); });
   // Kalender
-  ge('btn-add-event').addEventListener('click', function(){ openAddEventModal(null); });
-  ge('ev-type').addEventListener('change', onEventTypeChange);
-  ge('btn-add-itin-day').addEventListener('click', addItinDay);
-  ge('btn-save-event').addEventListener('click', saveEvent);
-  var btnDelEv2 = ge('btn-delete-event');
+  sg('btn-add-event').addEventListener('click', function(){ openAddEventModal(null); });
+  sg('ev-type').addEventListener('change', onEventTypeChange);
+  sg('btn-add-itin-day').addEventListener('click', addItinDay);
+  sg('btn-save-event').addEventListener('click', saveEvent);
+  var btnDelEv2 = sg('btn-delete-event');
   if(btnDelEv2) btnDelEv2.addEventListener('click', async function(){
     if(!currentEventId||!confirm('Hapus event ini?')) return;
     try{ await deleteDoc(doc(db,'events',currentEventId)); closeModal('modal-event-detail'); T('Event dihapus','success'); loadEventList(); }catch(e){ T('Gagal hapus','error'); }
   });
-  var btnEditEv2 = ge('btn-edit-event');
+  var btnEditEv2 = sg('btn-edit-event');
   if(btnEditEv2) btnEditEv2.addEventListener('click', function(){
     if(currentEventId&&currentEventData){ currentEventData._docId=currentEventId; openAddEventModal(currentEventData); }
   });
   // Self eval
-  ge('btn-save-self-ayah').addEventListener('click', function(){ saveSelfEval('ayah'); });
-  ge('btn-save-self-ibu').addEventListener('click', function(){ saveSelfEval('ibu'); });
-  ge('btn-add-dim-ayah').addEventListener('click', function(){ currentDimRole='ayah'; ge('new-dim-name').value=''; ge('new-dim-desc').value=''; ge('new-dim-icon').value=''; ge('modal-add-dim-title').textContent='+ Dimensi Papa'; openModal('modal-add-dim'); });
-  ge('btn-add-dim-ibu').addEventListener('click', function(){ currentDimRole='ibu'; ge('new-dim-name').value=''; ge('new-dim-desc').value=''; ge('new-dim-icon').value=''; ge('modal-add-dim-title').textContent='+ Dimensi Mama'; openModal('modal-add-dim'); });
-  ge('btn-save-dim').addEventListener('click', function(){ addSelfDim(currentDimRole); });
+  sg('btn-save-self-ayah').addEventListener('click', function(){ saveSelfEval('ayah'); });
+  sg('btn-save-self-ibu').addEventListener('click', function(){ saveSelfEval('ibu'); });
+  sg('btn-add-dim-ayah').addEventListener('click', function(){ currentDimRole='ayah'; sg('new-dim-name').value=''; sg('new-dim-desc').value=''; sg('new-dim-icon').value=''; sg('modal-add-dim-title').textContent='+ Dimensi Papa'; openModal('modal-add-dim'); });
+  sg('btn-add-dim-ibu').addEventListener('click', function(){ currentDimRole='ibu'; sg('new-dim-name').value=''; sg('new-dim-desc').value=''; sg('new-dim-icon').value=''; sg('modal-add-dim-title').textContent='+ Dimensi Mama'; openModal('modal-add-dim'); });
+  sg('btn-save-dim').addEventListener('click', function(){ addSelfDim(currentDimRole); });
 
   // Quran
-  var btnSaveQLog = ge('btn-save-quran-log');
+  var btnSaveQLog = sg('btn-save-quran-log');
   if(btnSaveQLog) btnSaveQLog.addEventListener('click', saveQuranLog);
-  var btnSaveQP = ge('btn-save-quran-profile');
+  var btnSaveQP = sg('btn-save-quran-profile');
   if(btnSaveQP) btnSaveQP.addEventListener('click', saveQuranProfile);
-  var btnShareQ = ge('btn-share-quran');
+  var btnShareQ = sg('btn-share-quran');
   if(btnShareQ) btnShareQ.addEventListener('click', openShareModal);
-  var btnCopyShare = ge('btn-copy-share');
+  var btnCopyShare = sg('btn-copy-share');
   if(btnCopyShare) btnCopyShare.addEventListener('click', function(){ if(navigator.clipboard && window._shareText){ navigator.clipboard.writeText(window._shareText).then(function(){ T('Teks disalin!','success'); }); } else { T('Salin teks di atas',''); } });
 
   // Quran tabs
@@ -2646,7 +2653,7 @@ document.addEventListener('DOMContentLoaded', function(){
       document.querySelectorAll('.tab[data-qtab]').forEach(function(t){ t.classList.remove('active'); });
       document.querySelectorAll('.tab-panel[id^="qtp-"]').forEach(function(t){ t.classList.remove('active'); });
       this.classList.add('active');
-      var panel = ge('qtp-'+tid); if(panel) panel.classList.add('active');
+      var panel = sg('qtp-'+tid); if(panel) panel.classList.add('active');
       if(tid==='detail') renderQuranMemberDetail();
       if(tid==='fathan') renderFathanPage();
       if(tid==='stats') renderQuranAchievements();
@@ -2654,10 +2661,17 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   });
 
+  // Main tabs
+  document.querySelectorAll('.tab[data-tab]').forEach(function(el){
+    el.addEventListener('click', function(){
+      switchTab(this.dataset.tab, this);
+    });
+  });
+
   // Set quran date default
-  var qDate = ge('q-date');
-  if(qDate) qDate.value = new Date().toISOString().split('T')[0];
-});
+  var qDate = sg('q-date');
+  if(qDate && qDate.value !== undefined) qDate.value = new Date().toISOString().split('T')[0];
+})();
 
 
 // ========== QURAN DATA ==========
