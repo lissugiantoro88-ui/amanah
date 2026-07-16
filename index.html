@@ -288,6 +288,8 @@ body{font-family:"Plus Jakarta Sans",sans-serif;background:var(--bg);color:var(-
 
 @media(min-width:540px){.page{padding-left:20px;padding-right:20px;}.topbar,.bottom-nav{max-width:540px;left:50%;transform:translateX(-50%);right:auto;width:100%;}}
 </style>
+  <!-- jsPDF for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -853,7 +855,12 @@ window._lt = setTimeout(function(){
   <div class="modal">
     <div class="modal-hdr"><div class="modal-title" id="ev-detail-title">Detail Event</div><div class="modal-close" data-close="modal-event-detail">x</div></div>
     <div id="ev-detail-content"></div>
-    <div class="modal-footer"><button class="btn btn-danger btn-sm" id="btn-delete-event">Hapus</button><button class="btn btn-primary btn-sm" id="btn-edit-event">Edit Event</button><button class="btn btn-outline" data-close="modal-event-detail">Tutup</button></div>
+    <div class="modal-footer" style="flex-wrap:wrap;gap:8px">
+      <button class="btn btn-danger btn-sm" id="btn-delete-event">Hapus</button>
+      <button class="btn btn-primary btn-sm" id="btn-edit-event">&#9998; Edit</button>
+      <button class="btn btn-teal btn-sm" id="btn-export-pdf" style="background:var(--teal);color:#fff">&#128462; Export PDF</button>
+      <button class="btn btn-outline" data-close="modal-event-detail">Tutup</button>
+    </div>
   </div>
 </div>
 <div class="modal-overlay" id="modal-add-dim">
@@ -2525,6 +2532,302 @@ function generateDaysFromRange() {
 }
 
 
+
+// ========== PDF EXPORT ==========
+function exportEventPDF() {
+  if (!currentEventData) return;
+  const data = currentEventData;
+  const it = data.itinerary || {};
+
+  const { jsPDF } = window.jspdf;
+  if (!jsPDF) { T('jsPDF tidak tersedia', 'error'); return; }
+
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pw = 210, ph = 297;
+  const ml = 18, mr = 18, mt = 20;
+  let y = mt;
+
+  // ── HELPERS ──
+  function setFont(style, size, color) {
+    doc.setFont('helvetica', style || 'normal');
+    doc.setFontSize(size || 11);
+    if (color) doc.setTextColor(color[0], color[1], color[2]);
+    else doc.setTextColor(40, 40, 40);
+  }
+  function drawRect(x, ry, w, h, r, fill) {
+    doc.setFillColor(fill[0], fill[1], fill[2]);
+    doc.roundedRect(x, ry, w, h, r, r, 'F');
+  }
+  function badge(text, bx, by, bgColor, textColor) {
+    setFont('bold', 8);
+    const tw = doc.getTextWidth(text);
+    const bw = tw + 8, bh = 5.5;
+    doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
+    doc.roundedRect(bx, by - 3.5, bw, bh, 1.5, 1.5, 'F');
+    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+    doc.text(text, bx + 4, by);
+    return bw + 4;
+  }
+  function checkPage(needed) {
+    if (y + needed > ph - 20) {
+      doc.addPage();
+      y = mt;
+      drawHeader();
+    }
+  }
+  function drawHeader() {
+    // Top gold strip
+    doc.setFillColor(184, 134, 11);
+    doc.rect(0, 0, pw, 10, 'F');
+    doc.setFillColor(245, 240, 225);
+    doc.rect(0, 10, pw, 8, 'F');
+    setFont('bold', 9, [184, 134, 11]);
+    doc.text('AMANAH — Dashboard Parenting Keluarga', ml, 15.5);
+    setFont('normal', 8, [120, 100, 60]);
+    const dateStr = new Date().toLocaleDateString('id-ID', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    doc.text(dateStr, pw - mr, 15.5, { align: 'right' });
+  }
+
+  // ── PAGE 1 ──
+  // Header strip
+  doc.setFillColor(184, 134, 11);
+  doc.rect(0, 0, pw, 48, 'F');
+
+  // Bismillah
+  setFont('bold', 10, [255, 248, 220]);
+  doc.text('بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم', pw / 2, 16, { align: 'center' });
+
+  // Type label
+  const typeIcons = {
+    rekreasi: 'REKREASI / LIBURAN', pondok: 'KUNJUNGAN PONDOK',
+    les: 'LES / KURSUS', kesehatan: 'KESEHATAN',
+    'ulang-tahun': 'ULANG TAHUN', milestone: 'MILESTONE',
+    sekolah: 'PERTEMUAN SEKOLAH', custom: 'EVENT'
+  };
+  setFont('normal', 8, [255, 230, 150]);
+  doc.text(typeIcons[data.type] || 'EVENT', pw / 2, 24, { align: 'center' });
+
+  // Event title
+  setFont('bold', 20, [255, 255, 255]);
+  const titleLines = doc.splitTextToSize(data.title || '', pw - 40);
+  doc.text(titleLines, pw / 2, 33, { align: 'center' });
+
+  // Bottom of header accent line
+  doc.setFillColor(255, 210, 80);
+  doc.rect(ml, 44, pw - ml - mr, 0.8, 'F');
+
+  y = 58;
+
+  // ── BADGES ROW ──
+  const statusColors = {
+    rencana: [[255, 193, 7], [80, 60, 0]],
+    dikonfirmasi: [[46, 125, 50], [255, 255, 255]],
+    selesai: [[13, 71, 161], [255, 255, 255]],
+    dibatalkan: [[198, 40, 40], [255, 255, 255]]
+  };
+  const sc = statusColors[data.status] || [[100,100,100],[255,255,255]];
+  const statusLabel = {rencana:'Rencana',dikonfirmasi:'Dikonfirmasi',selesai:'Selesai',dibatalkan:'Dibatalkan'};
+  let bx = ml;
+  bx += badge(statusLabel[data.status] || data.status, bx, y, sc[0], sc[1]);
+  if (data.typeLabel) bx += badge(data.typeLabel, bx, y, [13,71,161], [255,255,255]);
+  if (data.budget) bx += badge(data.budget, bx, y, [27,94,32], [255,255,255]);
+  y += 10;
+
+  // ── INFO CARD ──
+  drawRect(ml, y, pw-ml-mr, 28, 3, [252, 248, 235]);
+  doc.setDrawColor(184, 134, 11);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(ml, y, pw-ml-mr, 28, 3, 3, 'S');
+
+  const col1x = ml + 6, col2x = pw/2 + 4;
+  let cy = y + 7;
+  setFont('bold', 8, [120, 100, 60]);
+  doc.text('TANGGAL', col1x, cy);
+  doc.text('PESERTA', col2x, cy);
+  cy += 5;
+  setFont('normal', 10, [30, 30, 30]);
+  const dateRange = data.startDate + (data.endDate && data.endDate !== data.startDate ? ' s.d. ' + data.endDate : '');
+  doc.text(dateRange || '-', col1x, cy);
+  doc.text(data.peserta || data.pesertaCustom || '-', col2x, cy);
+  cy += 5;
+  if (data.budget) {
+    setFont('bold', 8, [120, 100, 60]);
+    doc.text('ANGGARAN', col1x, cy);
+    cy += 4;
+    setFont('normal', 10, [30, 30, 30]);
+    doc.text(data.budget, col1x, cy);
+  }
+  y += 33;
+
+  // ── CATATAN ──
+  if (data.note) {
+    checkPage(20);
+    drawRect(ml, y, pw-ml-mr, 6, 2, [235, 245, 255]);
+    setFont('bold', 8, [13, 71, 161]);
+    doc.text('CATATAN', ml+5, y+4.5);
+    y += 9;
+    setFont('normal', 10, [40, 40, 40]);
+    const noteLines = doc.splitTextToSize(data.note, pw-ml-mr-4);
+    noteLines.forEach(function(line) {
+      checkPage(6);
+      doc.text(line, ml+2, y); y += 5.5;
+    });
+    y += 4;
+  }
+
+  // ── ITINERARY ──
+  if (it && (it.transport || it.hotel || (it.days && it.days.length) || it.categoryData)) {
+    checkPage(16);
+    // Section header
+    doc.setFillColor(60, 60, 60);
+    doc.rect(ml, y, pw-ml-mr, 8, 'F');
+    setFont('bold', 11, [255, 255, 255]);
+    doc.text('PERENCANAAN DETAIL', ml+5, y+5.5);
+    y += 12;
+
+    // Category-specific fields
+    const catLabels = {
+      'ev-destinasi':'Destinasi',
+      'ev-tujuan-pondok':'Tujuan Kunjungan','ev-pesan-anak':'Pesan untuk Anak','ev-bawaan':'Barang Bawaan',
+      'ev-pengajar':'Pengajar','ev-materi':'Materi','ev-biaya':'Biaya','ev-target-les':'Target Les',
+      'ev-dokter':'Dokter / RS','ev-keluhan':'Keluhan','ev-hasil':'Hasil Pemeriksaan','ev-tindak-lanjut':'Tindak Lanjut',
+      'ev-konsep':'Konsep Acara','ev-tamu':'Tamu Undangan','ev-rundown':'Rundown','ev-persiapan':'Persiapan',
+      'ev-deskripsi-milestone':'Deskripsi Milestone','ev-persiapan-ms':'Persiapan','ev-dokumentasi':'Dokumentasi',
+      'ev-agenda':'Agenda','ev-hasil-sekolah':'Hasil Pertemuan','ev-keputusan':'Keputusan',
+      'ev-detail-custom':'Detail Kegiatan','ev-target-custom':'Target'
+    };
+
+    function drawField(label, value) {
+      if (!value) return;
+      const valLines = doc.splitTextToSize(value, pw-ml-mr-6);
+      const boxH = 6 + valLines.length * 5.2;
+      checkPage(boxH + 4);
+      setFont('bold', 7.5, [100, 80, 20]);
+      doc.text(label.toUpperCase(), ml, y);
+      y += 4.5;
+      drawRect(ml, y, pw-ml-mr, valLines.length*5.2+3, 2, [252, 248, 235]);
+      setFont('normal', 10, [30, 30, 30]);
+      valLines.forEach(function(line) { doc.text(line, ml+3, y+4); y += 5.2; });
+      y += 5;
+    }
+
+    // Category fields
+    if (it.categoryData) {
+      Object.entries(it.categoryData).forEach(function(e) {
+        if (e[1]) drawField(catLabels[e[0]] || e[0], e[1]);
+      });
+    }
+
+    // Transport + Hotel side by side
+    if (it.transport || it.hotel) {
+      checkPage(18);
+      const halfW = (pw-ml-mr-4)/2;
+      if (it.transport && it.transport !== '-- Pilih --') {
+        setFont('bold', 7.5, [100, 80, 20]);
+        doc.text('TRANSPORTASI', ml, y);
+        drawRect(ml, y+2, halfW, 10, 2, [252, 248, 235]);
+        setFont('normal', 10, [30, 30, 30]);
+        doc.text(it.transport, ml+3, y+8);
+      }
+      if (it.hotel) {
+        setFont('bold', 7.5, [100, 80, 20]);
+        doc.text('AKOMODASI / LOKASI', ml+halfW+4, y);
+        drawRect(ml+halfW+4, y+2, halfW, 10, 2, [252, 248, 235]);
+        setFont('normal', 10, [30, 30, 30]);
+        doc.text(doc.splitTextToSize(it.hotel, halfW-4)[0], ml+halfW+7, y+8);
+      }
+      y += 18;
+    }
+
+    // Schedule days
+    if (it.days && it.days.length) {
+      checkPage(16);
+      doc.setFillColor(60, 60, 60);
+      doc.rect(ml, y, pw-ml-mr, 7, 'F');
+      setFont('bold', 10, [255, 255, 255]);
+      doc.text('JADWAL KEGIATAN', ml+5, y+5);
+      y += 11;
+
+      it.days.forEach(function(day, idx) {
+        const activitiesH = (day.aktivitas && day.aktivitas.length) ? day.aktivitas.length * 5.5 : 0;
+        const dayH = 14 + activitiesH + (day.catatan ? 8 : 0);
+        checkPage(dayH + 6);
+
+        // Day header - gold
+        doc.setFillColor(184, 134, 11);
+        doc.rect(ml, y, pw-ml-mr, 8, 'F');
+        setFont('bold', 9, [255, 255, 255]);
+        const dayLabel = 'Hari ' + day.day + (day.tanggalLabel ? '  —  ' + day.tanggalLabel : day.tanggal ? '  —  ' + day.tanggal : '');
+        doc.text(dayLabel, ml+5, y+5.5);
+        y += 10;
+
+        // Activities
+        if (day.aktivitas && day.aktivitas.length) {
+          day.aktivitas.forEach(function(akt) {
+            if (!akt) return;
+            checkPage(7);
+            // Bullet
+            doc.setFillColor(184, 134, 11);
+            doc.circle(ml+3, y-0.5, 1, 'F');
+            setFont('normal', 9.5, [30, 30, 30]);
+            const aktLines = doc.splitTextToSize(akt, pw-ml-mr-10);
+            aktLines.forEach(function(al, i) {
+              doc.text(al, ml+7, y + (i*5));
+            });
+            y += aktLines.length * 5 + 1;
+          });
+        }
+
+        // Day note
+        if (day.catatan) {
+          checkPage(10);
+          y += 2;
+          drawRect(ml+2, y, pw-ml-mr-4, 7, 1.5, [245, 245, 245]);
+          setFont('italic', 8.5, [100, 100, 100]);
+          doc.text('Catatan: ' + day.catatan, ml+5, y+4.5);
+          y += 10;
+        }
+        y += 4;
+      });
+    }
+
+    // Tips
+    if (it.tips) {
+      checkPage(18);
+      doc.setFillColor(255, 248, 210);
+      doc.setDrawColor(184, 134, 11);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(ml, y, pw-ml-mr, 12, 2, 2, 'FD');
+      setFont('bold', 8, [130, 90, 0]);
+      doc.text('TIPS & CATATAN PENTING', ml+5, y+5);
+      setFont('normal', 9, [80, 60, 0]);
+      const tipLines = doc.splitTextToSize(it.tips, pw-ml-mr-8);
+      doc.text(tipLines[0] || '', ml+5, y+9.5);
+      y += 14;
+    }
+  }
+
+  // ── FOOTER on each page ──
+  const totalPages = doc.getNumberOfPages();
+  for (let pg = 1; pg <= totalPages; pg++) {
+    doc.setPage(pg);
+    // Bottom line
+    doc.setDrawColor(184, 134, 11);
+    doc.setLineWidth(0.5);
+    doc.line(ml, ph-12, pw-mr, ph-12);
+    setFont('normal', 7.5, [150, 120, 60]);
+    doc.text('Amanah — Dashboard Parenting Islami & Madani', ml, ph-8);
+    doc.text('Halaman ' + pg + ' / ' + totalPages, pw-mr, ph-8, { align: 'right' });
+    if (pg > 1) drawHeader();
+  }
+
+  // ── SAVE ──
+  const filename = 'Amanah_Event_' + (data.title||'event').replace(/[^a-zA-Z0-9]/g,'_') + '.pdf';
+  doc.save(filename);
+  T('PDF berhasil diunduh!', 'success');
+}
+
+
 // ===== UTILS =====
 function getChildAge(cid) {
   const c2 = childrenData[cid];
@@ -2641,6 +2944,10 @@ function getWeekLabel(){
   if(btnSaveQLog) btnSaveQLog.addEventListener('click', saveQuranLog);
   var btnSaveQP = sg('btn-save-quran-profile');
   if(btnSaveQP) btnSaveQP.addEventListener('click', saveQuranProfile);
+  // Export PDF
+  var btnExportPDF = sg('btn-export-pdf');
+  if(btnExportPDF && btnExportPDF.addEventListener) btnExportPDF.addEventListener('click', function(){ exportEventPDF(); });
+
   var btnShareQ = sg('btn-share-quran');
   if(btnShareQ) btnShareQ.addEventListener('click', openShareModal);
   var btnCopyShare = sg('btn-copy-share');
