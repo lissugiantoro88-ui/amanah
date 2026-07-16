@@ -1044,6 +1044,7 @@ function showPage(page) {
     loadMusyawarahList();
   }
   if (page === 'kalender') loadEventList();
+  if (page === 'kalender') { setTimeout(function(){ if(typeof renderCategoryFields==='function') renderCategoryFields('rekreasi'); },100); }
   if (page === 'saya') {
     if (window._isParent === false) { T('Fitur ini hanya untuk Papa & Mama','error'); return; }
     renderSelfDims('ayah'); renderSelfDims('ibu'); loadSelfEvalHistory();
@@ -1690,17 +1691,28 @@ function openAddEventModal(existingData) {
   ge('ev-custom-name').value = existingData && existingData.type==='custom' ? (existingData.typeLabel||'') : '';
   ge('ev-peserta-custom').value = existingData ? (existingData.pesertaCustom||'') : '';
   // Peserta chips
-  document.querySelectorAll('[data-group="ev-peserta"]').forEach(function(c){ c.classList.remove('selected'); if(existingData&&existingData.peserta===c.textContent.trim()) c.classList.add('selected'); });
-  // Itinerary
+  document.querySelectorAll('[data-group="ev-peserta"]').forEach(function(c2){ c2.classList.remove('selected'); if(existingData&&existingData.peserta===c2.textContent.trim()) c2.classList.add('selected'); });
+  // Itinerary - always restore
   if (existingData && existingData.itinerary) {
     const it = existingData.itinerary;
-    ge('ev-destinasi').value = it.destinasi||''; ge('ev-transport').value = it.transport||'';
-    ge('ev-hotel').value = it.hotel||''; ge('ev-tips').value = it.tips||'';
+    ge('ev-transport').value = it.transport||'';
+    ge('ev-hotel').value = it.hotel||'';
+    ge('ev-tips').value = it.tips||'';
     itinDays = JSON.parse(JSON.stringify(it.days||[]));
   } else {
-    ge('ev-destinasi').value=''; ge('ev-hotel').value=''; ge('ev-tips').value=''; itinDays=[];
+    ge('ev-hotel').value=''; ge('ev-tips').value=''; itinDays=[];
   }
-  renderItinDays(); onEventTypeChange();
+  renderItinDays();
+  onEventTypeChange(); // this will render category fields
+  // Restore category field values after render
+  if (existingData && existingData.itinerary && existingData.itinerary.categoryData) {
+    setTimeout(function(){
+      const cd = existingData.itinerary.categoryData;
+      Object.keys(cd).forEach(function(fid){
+        const el2 = ge(fid); if(el2) el2.value = cd[fid]||'';
+      });
+    }, 50);
+  }
   openModal('modal-event');
 }
 window.openAddEventModal = openAddEventModal;
@@ -1708,9 +1720,111 @@ window.openAddEventModal = openAddEventModal;
 function onEventTypeChange() {
   const type = ge('ev-type').value;
   ge('ev-custom-name-wrap').style.display = type==='custom' ? '' : 'none';
-  ge('itinerary-section').style.display = type==='rekreasi' ? '' : 'none';
+  ge('itinerary-section').style.display = ''; // always show for all types
+
+  // Update hotel/lokasi label
+  const hotelLabel = ge('ev-hotel-label');
+  if (hotelLabel) {
+    const labels = {
+      rekreasi: 'Akomodasi / Hotel',
+      pondok: 'Nama Pondok / Lokasi',
+      les: 'Lokasi Les / Kursus',
+      kesehatan: 'RS / Klinik / Dokter',
+      'ulang-tahun': 'Lokasi Acara',
+      milestone: 'Lokasi / Tempat',
+      sekolah: 'Nama Sekolah / Lokasi',
+      custom: 'Lokasi / Tempat'
+    };
+    hotelLabel.textContent = labels[type] || 'Akomodasi / Lokasi';
+  }
+
+  // Update hotel placeholder
+  const hotelInput = ge('ev-hotel');
+  if (hotelInput) {
+    const placeholders = {
+      rekreasi: 'Nama hotel atau penginapan',
+      pondok: 'Nama pondok pesantren',
+      les: 'Nama tempat les / alamat',
+      kesehatan: 'Nama RS, klinik, atau dokter',
+      'ulang-tahun': 'Nama gedung atau alamat',
+      milestone: 'Nama institusi atau lokasi',
+      sekolah: 'Nama sekolah atau ruang pertemuan',
+      custom: 'Lokasi kegiatan'
+    };
+    hotelInput.placeholder = placeholders[type] || 'Lokasi tujuan';
+  }
+
+  // Update day/session label
+  const dayLabel = document.querySelector('#itin-days-list')?.previousElementSibling?.querySelector('div');
+  // Load category-specific fields
+  renderCategoryFields(type);
 }
 window.onEventTypeChange = onEventTypeChange;
+
+function renderCategoryFields(type) {
+  const el = ge('ev-category-fields');
+  if (!el) return;
+  el.innerHTML = '';
+
+  const fields = {
+    rekreasi: [
+      {id:'ev-destinasi', label:'Destinasi Utama', placeholder:'Yogyakarta, Bali, Bandung, dll', type:'text'},
+    ],
+    pondok: [
+      {id:'ev-tujuan-pondok', label:'Tujuan Kunjungan', placeholder:'Menjenguk, pertemuan wali, dll', type:'text'},
+      {id:'ev-pesan-anak', label:'Pesan untuk Anak', placeholder:'Pesan, motivasi, atau hal yang ingin disampaikan...', type:'textarea'},
+      {id:'ev-bawaan', label:'Barang Bawaan', placeholder:'Makanan, kebutuhan, perlengkapan...', type:'textarea'},
+    ],
+    les: [
+      {id:'ev-pengajar', label:'Pengajar / Instruktur', placeholder:'Nama pengajar atau lembaga', type:'text'},
+      {id:'ev-materi', label:'Materi / Mata Pelajaran', placeholder:'Matematika, Bahasa Inggris, dll', type:'text'},
+      {id:'ev-biaya', label:'Biaya', placeholder:'Contoh: Rp 500.000/bulan', type:'text'},
+      {id:'ev-target-les', label:'Target / Tujuan Les', placeholder:'Apa yang ingin dicapai...', type:'textarea'},
+    ],
+    kesehatan: [
+      {id:'ev-dokter', label:'Dokter / Spesialis', placeholder:'dr. Nama, Sp.XX', type:'text'},
+      {id:'ev-keluhan', label:'Keluhan / Kondisi', placeholder:'Keluhan yang akan diperiksa...', type:'textarea'},
+      {id:'ev-hasil', label:'Hasil Pemeriksaan', placeholder:'Isi setelah selesai...', type:'textarea'},
+      {id:'ev-tindak-lanjut', label:'Tindak Lanjut / Obat', placeholder:'Resep, jadwal kontrol, dll', type:'textarea'},
+    ],
+    'ulang-tahun': [
+      {id:'ev-konsep', label:'Konsep / Tema Acara', placeholder:'Contoh: Tema dinosaurus, warna biru', type:'text'},
+      {id:'ev-tamu', label:'Tamu Undangan', placeholder:'Siapa saja yang diundang...', type:'textarea'},
+      {id:'ev-rundown', label:'Rundown Acara', placeholder:'Urutan acara dari awal sampai akhir...', type:'textarea'},
+      {id:'ev-persiapan', label:'Persiapan / To-Do', placeholder:'Kue, dekorasi, hadiah, dll', type:'textarea'},
+    ],
+    milestone: [
+      {id:'ev-deskripsi-milestone', label:'Deskripsi Milestone', placeholder:'Pencapaian apa yang ingin dicapai...', type:'textarea'},
+      {id:'ev-persiapan-ms', label:'Persiapan yang Dibutuhkan', placeholder:'Apa saja yang perlu disiapkan...', type:'textarea'},
+      {id:'ev-dokumentasi', label:'Cara Dokumentasi', placeholder:'Foto, video, sertifikat, dll', type:'text'},
+    ],
+    sekolah: [
+      {id:'ev-agenda', label:'Agenda / Topik Pertemuan', placeholder:'Rapor, konsultasi, rapat wali, dll', type:'textarea'},
+      {id:'ev-hasil-sekolah', label:'Hasil Pertemuan', placeholder:'Isi setelah pertemuan selesai...', type:'textarea'},
+      {id:'ev-keputusan', label:'Keputusan / Tindak Lanjut', placeholder:'Apa yang disepakati...', type:'textarea'},
+    ],
+    custom: [
+      {id:'ev-detail-custom', label:'Detail Kegiatan', placeholder:'Jelaskan detail kegiatan...', type:'textarea'},
+      {id:'ev-target-custom', label:'Target / Tujuan', placeholder:'Apa yang ingin dicapai...', type:'textarea'},
+    ]
+  };
+
+  const categoryFields = fields[type] || fields['custom'];
+  categoryFields.forEach(function(f) {
+    const wrap = document.createElement('div'); wrap.className = 'fg';
+    const lbl = document.createElement('label'); lbl.textContent = f.label; wrap.appendChild(lbl);
+    if (f.type === 'textarea') {
+      const inp = document.createElement('textarea');
+      inp.id = f.id; inp.placeholder = f.placeholder; inp.style.minHeight='60px';
+      wrap.appendChild(inp);
+    } else {
+      const inp = document.createElement('input');
+      inp.type = 'text'; inp.id = f.id; inp.placeholder = f.placeholder;
+      wrap.appendChild(inp);
+    }
+    el.appendChild(wrap);
+  });
+}
 
 function addItinDay() {
   itinDays.push({day:itinDays.length+1, tanggal:'', aktivitas:[], catatan:''});
@@ -1756,6 +1870,23 @@ async function saveEvent() {
   const pesertaCustom = ge('ev-peserta-custom').value.trim();
   const peserta = pesertaCustom || (pesertaChip ? pesertaChip.textContent.trim() : '');
   const typeLabels = {rekreasi:'Rekreasi/Liburan',pondok:'Kunjungan Pondok',les:'Les/Kursus',kesehatan:'Kesehatan',['ulang-tahun']:'Ulang Tahun',milestone:'Milestone',sekolah:'Pertemuan Sekolah',custom:ge('ev-custom-name').value||'Event Custom'};
+  // Collect all category-specific field values
+  const categoryData = {};
+  const catFieldIds = {
+    rekreasi: ['ev-destinasi'],
+    pondok: ['ev-tujuan-pondok','ev-pesan-anak','ev-bawaan'],
+    les: ['ev-pengajar','ev-materi','ev-biaya','ev-target-les'],
+    kesehatan: ['ev-dokter','ev-keluhan','ev-hasil','ev-tindak-lanjut'],
+    'ulang-tahun': ['ev-konsep','ev-tamu','ev-rundown','ev-persiapan'],
+    milestone: ['ev-deskripsi-milestone','ev-persiapan-ms','ev-dokumentasi'],
+    sekolah: ['ev-agenda','ev-hasil-sekolah','ev-keputusan'],
+    custom: ['ev-detail-custom','ev-target-custom']
+  };
+  const fieldsToCollect = catFieldIds[type] || catFieldIds['custom'];
+  fieldsToCollect.forEach(function(fid) {
+    const el2 = ge(fid); if(el2) categoryData[fid] = el2.value;
+  });
+
   const data = {
     type, typeLabel:typeLabels[type]||type, title,
     startDate:ge('ev-start').value, endDate:ge('ev-end').value,
@@ -1763,9 +1894,16 @@ async function saveEvent() {
     note:ge('ev-note').value, budget:ge('ev-budget').value,
     date:new Date().toISOString(), by:CU.profile.name, familyCode:CU.profile.familyCode
   };
-  if (type === 'rekreasi') {
-    data.itinerary = {destinasi:ge('ev-destinasi').value, transport:ge('ev-transport').value, hotel:ge('ev-hotel').value, days:JSON.parse(JSON.stringify(itinDays)), tips:ge('ev-tips').value};
-  }
+  // Always save itinerary for all types
+  data.itinerary = {
+    transport:ge('ev-transport').value,
+    hotel:ge('ev-hotel').value,
+    days:JSON.parse(JSON.stringify(itinDays)),
+    tips:ge('ev-tips').value,
+    categoryData: categoryData,
+    // Legacy field for rekreasi
+    destinasi: ge('ev-destinasi') ? ge('ev-destinasi').value : ''
+  };
   try {
     if (editingEventId) { await setDoc(doc(db,'events',editingEventId), data, {merge:true}); }
     else { await addDoc(collection(db,'events'), data); }
@@ -1820,20 +1958,46 @@ function showEventDetail(docId, data) {
   if(data.note) html+='<div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:14px;padding:12px;background:var(--bg);border-radius:var(--rx)">'+data.note+'</div>';
   if(data.itinerary){
     const it=data.itinerary;
-    html+='<div style="font-size:14px;font-weight:800;margin-bottom:10px">Itinerary</div>';
-    if(it.destinasi) html+='<div style="font-size:13px;margin-bottom:4px"><strong>Destinasi:</strong> '+it.destinasi+'</div>';
-    if(it.transport) html+='<div style="font-size:13px;margin-bottom:4px"><strong>Transportasi:</strong> '+it.transport+'</div>';
-    if(it.hotel) html+='<div style="font-size:13px;margin-bottom:12px"><strong>Akomodasi:</strong> '+it.hotel+'</div>';
+    html+='<div style="font-size:14px;font-weight:800;margin-bottom:12px;padding-top:12px;border-top:1px solid var(--border)">Perencanaan Detail</div>';
+
+    // Category-specific fields
+    const catLabels = {
+      'ev-destinasi':'Destinasi',
+      'ev-tujuan-pondok':'Tujuan Kunjungan','ev-pesan-anak':'Pesan untuk Anak','ev-bawaan':'Barang Bawaan',
+      'ev-pengajar':'Pengajar','ev-materi':'Materi','ev-biaya':'Biaya','ev-target-les':'Target Les',
+      'ev-dokter':'Dokter','ev-keluhan':'Keluhan','ev-hasil':'Hasil Pemeriksaan','ev-tindak-lanjut':'Tindak Lanjut',
+      'ev-konsep':'Konsep Acara','ev-tamu':'Tamu Undangan','ev-rundown':'Rundown','ev-persiapan':'Persiapan',
+      'ev-deskripsi-milestone':'Deskripsi Milestone','ev-persiapan-ms':'Persiapan','ev-dokumentasi':'Dokumentasi',
+      'ev-agenda':'Agenda','ev-hasil-sekolah':'Hasil Pertemuan','ev-keputusan':'Keputusan',
+      'ev-detail-custom':'Detail Kegiatan','ev-target-custom':'Target'
+    };
+    if(it.categoryData){
+      Object.entries(it.categoryData).forEach(function(e){
+        if(e[1]){
+          const lbl=catLabels[e[0]]||e[0];
+          html+='<div style="margin-bottom:8px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">'+lbl+'</div>'
+            +'<div style="font-size:13px;color:var(--text);line-height:1.6;background:var(--bg);padding:10px;border-radius:var(--rx)">'+e[1].replace(/
+/g,'<br>')+'</div></div>';
+        }
+      });
+    }
+
+    // Default fields
+    if(it.transport&&it.transport!=='-- Pilih --') html+='<div style="margin-bottom:8px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Transportasi</div><div style="font-size:13px;background:var(--bg);padding:10px;border-radius:var(--rx)">'+it.transport+'</div></div>';
+    if(it.hotel) html+='<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Akomodasi / Lokasi</div><div style="font-size:13px;background:var(--bg);padding:10px;border-radius:var(--rx)">'+it.hotel+'</div></div>';
+
+    // Schedule
     if(it.days&&it.days.length){
+      html+='<div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:8px">Jadwal Per Hari / Sesi</div>';
       it.days.forEach(function(day){
         html+='<div style="background:var(--bg);border-radius:var(--rx);padding:12px;margin-bottom:8px;border:1px solid var(--border)">'
-          +'<div style="font-size:12px;font-weight:800;color:var(--gold);margin-bottom:6px">Hari '+day.day+(day.tanggal?' - '+day.tanggal:'')+'</div>';
-        if(day.aktivitas&&day.aktivitas.length) day.aktivitas.forEach(function(a){ if(a) html+='<div style="font-size:12px;padding:3px 0;border-bottom:1px solid var(--bg2)">'+a+'</div>'; });
+          +'<div style="font-size:12px;font-weight:800;color:var(--gold);margin-bottom:6px">Hari/Sesi '+day.day+(day.tanggal?' - '+day.tanggal:'')+'</div>';
+        if(day.aktivitas&&day.aktivitas.length) day.aktivitas.forEach(function(a){ if(a) html+='<div style="font-size:12px;padding:4px 0;border-bottom:1px solid var(--bg2)">'+a+'</div>'; });
         if(day.catatan) html+='<div style="font-size:11px;color:var(--muted);margin-top:6px;font-style:italic">'+day.catatan+'</div>';
         html+='</div>';
       });
     }
-    if(it.tips) html+='<div style="font-size:13px;color:var(--muted);margin-top:8px;padding:10px;background:var(--gold-d);border-radius:var(--rx)">Tips: '+it.tips+'</div>';
+    if(it.tips) html+='<div style="font-size:13px;color:var(--muted);margin-top:8px;padding:12px;background:var(--gold-d);border-radius:var(--rx);border:1px solid var(--gold-b)"><strong>Tips & Catatan:</strong> '+it.tips+'</div>';
   }
   el.innerHTML = html;
   openModal('modal-event-detail');
@@ -2813,12 +2977,41 @@ function openShareModal() {
     <div class="fg"><label>Status</label><select id="ev-status"><option value="rencana">Rencana</option><option value="dikonfirmasi">Dikonfirmasi</option><option value="selesai">Selesai</option><option value="dibatalkan">Dibatalkan</option></select></div>
     <div class="fg"><label>Catatan</label><textarea id="ev-note" placeholder="Detail, hal yang perlu disiapkan..."></textarea></div>
     <div class="fg"><label>Anggaran</label><input type="text" id="ev-budget" placeholder="Contoh: Rp 5.000.000"></div>
-    <div id="itinerary-section" style="display:none">
-      <div class="sec-label">Itinerary Lengkap</div>
-      <div class="fg"><label>Destinasi</label><input type="text" id="ev-destinasi" placeholder="Yogyakarta, Bali, dll"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="fg"><label>Transportasi</label><select id="ev-transport"><option>Mobil Pribadi</option><option>Pesawat</option><option>Kereta</option><option>Bus</option><option>Kapal</option></select></div><div class="fg"><label>Akomodasi</label><input type="text" id="ev-hotel" placeholder="Nama hotel/penginapan"></div></div>
-      <div style="background:var(--bg);border-radius:var(--rs);padding:14px;border:1px solid var(--border)"><div style="font-size:12px;font-weight:800;color:var(--muted);margin-bottom:10px">Jadwal Per Hari</div><div id="itin-days-list"></div><button class="btn btn-teal btn-sm" id="btn-add-itin-day" style="margin-top:10px">+ Tambah Hari</button></div>
-      <div class="fg" style="margin-top:14px"><label>Tips Perjalanan</label><textarea id="ev-tips" placeholder="Tips, hal penting, nomor darurat..."></textarea></div>
+    <div id="itinerary-section">
+      <div class="sec-label">Perencanaan Detail</div>
+
+      <!-- Field khusus per kategori -->
+      <div id="ev-category-fields"></div>
+
+      <!-- Default fields untuk semua kategori -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg">
+          <label>Transportasi</label>
+          <select id="ev-transport">
+            <option value="">-- Pilih --</option>
+            <option>Mobil Pribadi</option>
+            <option>Pesawat</option>
+            <option>Kereta</option>
+            <option>Bus</option>
+            <option>Kapal/Ferry</option>
+            <option>Ojek/Taksi Online</option>
+            <option>Jalan Kaki</option>
+            <option>Tidak Ada</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label id="ev-hotel-label">Akomodasi / Lokasi</label>
+          <input type="text" id="ev-hotel" placeholder="Hotel, penginapan, atau lokasi tujuan">
+        </div>
+      </div>
+
+      <div style="background:var(--bg);border-radius:var(--rs);padding:14px;border:1px solid var(--border);margin-bottom:14px">
+        <div style="font-size:12px;font-weight:800;color:var(--muted);margin-bottom:10px">Jadwal Per Hari / Sesi</div>
+        <div id="itin-days-list"></div>
+        <button class="btn btn-teal btn-sm" id="btn-add-itin-day" style="margin-top:10px">+ Tambah Hari / Sesi</button>
+      </div>
+
+      <div class="fg"><label>Tips & Catatan Penting</label><textarea id="ev-tips" placeholder="Tips, hal penting, yang perlu disiapkan..."></textarea></div>
     </div>
     <div class="modal-footer"><button class="btn btn-outline" data-close="modal-event">Batal</button><button class="btn btn-primary" id="btn-save-event">Simpan Event</button></div>
   </div>
