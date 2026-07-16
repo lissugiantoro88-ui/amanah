@@ -2019,6 +2019,66 @@ function showEventDetail(docId, data) {
 
 window.renderSelfDims = renderSelfDims;
 
+
+// ===== SELF EVAL DIMS =====
+async function loadSelfDimsFromDB() {
+  if (!CU) return;
+  try {
+    const s = await getDoc(doc(db,'selfdims',CU.profile.familyCode));
+    if (s.exists()) {
+      const d = s.data();
+      if (d.ayah && d.ayah.length) selfDims.ayah = d.ayah;
+      if (d.ibu && d.ibu.length) selfDims.ibu = d.ibu;
+    }
+  } catch(e) { console.warn('loadSelfDimsFromDB:', e); }
+  renderSelfDims('ayah');
+  renderSelfDims('ibu');
+}
+
+async function saveSelfDimsDB() {
+  if (!CU) return;
+  try { await setDoc(doc(db,'selfdims',CU.profile.familyCode), selfDims); }
+  catch(e) { console.warn('saveSelfDimsDB:', e); }
+}
+
+function renderSelfDims(role) {
+  const el = ge('self-dims-' + role);
+  if (!el) return;
+  el.innerHTML = '';
+  const dims = selfDims[role] || [];
+  dims.forEach(function(dim) {
+    const val = selfRatings[role][dim.id] || 0;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bg2)';
+    const info = document.createElement('div'); info.style.flex = '1';
+    info.innerHTML = '<div style="font-size:13px;font-weight:700">' + (dim.icon||'') + ' ' + dim.name + '</div>'
+      + '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + (dim.desc||'') + '</div>';
+    const rw = document.createElement('div'); rw.style.cssText = 'display:flex;gap:4px;flex-shrink:0';
+    [{v:1,label:'Belum',col:'var(--rose)'},{v:2,label:'Sebagian',col:'var(--gold)'},{v:3,label:'Terpenuhi',col:'var(--teal)'}].forEach(function(opt) {
+      const btn = document.createElement('div');
+      const isActive = val === opt.v;
+      btn.style.cssText = 'width:72px;height:28px;border-radius:8px;border:1.5px solid '+(isActive?opt.col:'var(--border)')+';cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:'+(isActive?opt.col:'transparent')+';color:'+(isActive?'#fff':opt.col)+';transition:all .15s';
+      btn.textContent = opt.label;
+      btn.addEventListener('click', function() { selfRatings[role][dim.id] = opt.v; renderSelfDims(role); });
+      rw.appendChild(btn);
+    });
+    const del = document.createElement('span'); del.className = 'del-btn'; del.textContent = 'x';
+    del.addEventListener('click', async function() {
+      if (!confirm('Hapus dimensi ini?')) return;
+      selfDims[role] = selfDims[role].filter(function(d) { return d.id !== dim.id; });
+      await saveSelfDimsDB(); renderSelfDims(role);
+    });
+    row.appendChild(info); row.appendChild(rw); row.appendChild(del);
+    el.appendChild(row);
+  });
+  // Legend
+  const legend = document.createElement('div');
+  legend.style.cssText = 'font-size:10px;color:var(--dim);margin-top:8px;display:flex;gap:12px';
+  legend.innerHTML = '<span>Belum = tidak terpenuhi</span><span>Sebagian = ada usaha</span><span>Terpenuhi = sudah</span>';
+  el.appendChild(legend);
+}
+window.renderSelfDims = renderSelfDims;
+
 async function saveSelfEval(role) {
   if (!CU) return;
   const note = ge('self-note-' + role).value;
