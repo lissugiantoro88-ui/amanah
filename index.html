@@ -773,6 +773,100 @@ window._lt = setTimeout(function(){
 <div class="toast" id="toast"></div>
 
 
+<div class="modal-overlay" id="modal-event">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title" id="modal-event-title">Tambah Event</div><div class="modal-close" data-close="modal-event">x</div></div>
+    <div class="fg"><label>Jenis Event</label><select id="ev-type"><option value="rekreasi">Rekreasi / Liburan</option><option value="pondok">Kunjungan ke Pondok</option><option value="les">Les / Kursus Anak</option><option value="kesehatan">Kesehatan / Dokter</option><option value="ulang-tahun">Ulang Tahun</option><option value="milestone">Milestone Penting</option><option value="sekolah">Pertemuan Sekolah</option><option value="custom">Event Lainnya (Custom)</option></select></div>
+    <div class="fg" id="ev-custom-name-wrap" style="display:none"><label>Nama Event</label><input type="text" id="ev-custom-name" placeholder="Nama event Anda..."></div>
+    <div class="fg"><label>Judul</label><input type="text" id="ev-title" placeholder="Contoh: Liburan ke Yogya"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="fg"><label>Tanggal Mulai</label><input type="date" id="ev-start"></div><div class="fg"><label>Tanggal Selesai</label><input type="date" id="ev-end"></div></div>
+    <div class="fg"><label>Peserta</label><div class="chip-group"><div class="chip" data-group="ev-peserta">Seluruh Keluarga</div><div class="chip" data-group="ev-peserta">Papa &amp; Fakhrur</div><div class="chip" data-group="ev-peserta">Papa &amp; Faqih</div><div class="chip" data-group="ev-peserta">Papa &amp; Fathan</div><div class="chip" data-group="ev-peserta">Papa &amp; Mama</div><div class="chip" data-group="ev-peserta">Semua Anak</div></div><input type="text" id="ev-peserta-custom" placeholder="Atau tulis peserta sendiri..." style="margin-top:8px"></div>
+    <div class="fg"><label>Status</label><select id="ev-status"><option value="rencana">Rencana</option><option value="dikonfirmasi">Dikonfirmasi</option><option value="selesai">Selesai</option><option value="dibatalkan">Dibatalkan</option></select></div>
+    <div class="fg"><label>Catatan</label><textarea id="ev-note" placeholder="Detail, hal yang perlu disiapkan..."></textarea></div>
+    <div class="fg"><label>Anggaran</label><input type="text" id="ev-budget" placeholder="Contoh: Rp 5.000.000"></div>
+    <div id="itinerary-section">
+      <div class="sec-label">Perencanaan Detail</div>
+
+      <!-- Field khusus per kategori -->
+      <div id="ev-category-fields"></div>
+
+      <!-- Default fields untuk semua kategori -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg">
+          <label>Transportasi</label>
+          <select id="ev-transport">
+            <option value="">-- Pilih --</option>
+            <option>Mobil Pribadi</option>
+            <option>Pesawat</option>
+            <option>Kereta</option>
+            <option>Bus</option>
+            <option>Kapal/Ferry</option>
+            <option>Ojek/Taksi Online</option>
+            <option>Jalan Kaki</option>
+            <option>Tidak Ada</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label id="ev-hotel-label">Akomodasi / Lokasi</label>
+          <input type="text" id="ev-hotel" placeholder="Hotel, penginapan, atau lokasi tujuan">
+        </div>
+      </div>
+
+      <!-- CALENDAR RANGE PICKER -->
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Jadwal Per Hari</label>
+        <div id="itin-calendar-wrap" style="background:#fff;border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)">
+          <!-- Calendar Header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--gold);color:#fff">
+            <button id="cal-prev" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;font-family:inherit">&#8249;</button>
+            <div id="cal-month-label" style="font-size:15px;font-weight:800;letter-spacing:.3px"></div>
+            <button id="cal-next" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;font-family:inherit">&#8250;</button>
+          </div>
+          <!-- Day labels -->
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);background:var(--bg2);padding:6px 8px">
+            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--muted);padding:4px 0">Sen</div>
+            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--muted);padding:4px 0">Sel</div>
+            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--muted);padding:4px 0">Rab</div>
+            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--muted);padding:4px 0">Kam</div>
+            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--muted);padding:4px 0">Jum</div>
+            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--rose);padding:4px 0">Sab</div>
+            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--rose);padding:4px 0">Min</div>
+          </div>
+          <!-- Calendar grid -->
+          <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);padding:8px;gap:2px"></div>
+          <!-- Range info -->
+          <div id="cal-range-info" style="padding:10px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);display:none">
+            <span id="cal-range-text"></span>
+            <span onclick="clearCalRange()" style="color:var(--rose);cursor:pointer;font-weight:700;margin-left:10px">Hapus Range</span>
+          </div>
+        </div>
+        <!-- Schedule list per day -->
+        <div id="itin-days-list" style="margin-top:12px"></div>
+      </div>
+
+      <div class="fg"><label>Tips & Catatan Penting</label><textarea id="ev-tips" placeholder="Tips, hal penting, yang perlu disiapkan..."></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" data-close="modal-event">Batal</button><button class="btn btn-primary" id="btn-save-event">Simpan Event</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-event-detail">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title" id="ev-detail-title">Detail Event</div><div class="modal-close" data-close="modal-event-detail">x</div></div>
+    <div id="ev-detail-content"></div>
+    <div class="modal-footer"><button class="btn btn-danger btn-sm" id="btn-delete-event">Hapus</button><button class="btn btn-primary btn-sm" id="btn-edit-event">Edit Event</button><button class="btn btn-outline" data-close="modal-event-detail">Tutup</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-add-dim">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title" id="modal-add-dim-title">+ Tambah Dimensi</div><div class="modal-close" data-close="modal-add-dim">x</div></div>
+    <div class="fg"><label>Nama Dimensi</label><input type="text" id="new-dim-name" placeholder="Contoh: Imam Sholat Berjamaah"></div>
+    <div class="fg"><label>Deskripsi / Target</label><input type="text" id="new-dim-desc" placeholder="Contoh: Minimal 3x seminggu menjadi imam"></div>
+    <div class="fg"><label>Ikon (emoji)</label><input type="text" id="new-dim-icon" placeholder="Contoh: ketik emoji" maxlength="4"></div>
+    <div class="modal-footer"><button class="btn btn-outline" data-close="modal-add-dim">Batal</button><button class="btn btn-primary" id="btn-save-dim">Tambah Dimensi</button></div>
+  </div>
+</div>
+
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -2483,6 +2577,11 @@ document.addEventListener('DOMContentLoaded', function(){
   // Modal close
   document.querySelectorAll('[data-close]').forEach(function(el){ el.addEventListener('click', function(){ closeModal(this.dataset.close); }); });
   document.querySelectorAll('.modal-overlay').forEach(function(o){ o.addEventListener('click', function(e){ if(e.target===o) o.classList.remove('open'); }); });
+  // Also wire save-dim and add-itin-day which are in modals
+  var btnSaveDim2 = ge('btn-save-dim');
+  if(btnSaveDim2) btnSaveDim2.addEventListener('click', function(){ addSelfDim(currentDimRole); });
+  var btnAddItinDay2 = ge('btn-add-itin-day');
+  if(btnAddItinDay2) btnAddItinDay2.addEventListener('click', addItinDay);
   // Quick actions home
   ge('qa-checkin').addEventListener('click', function(){ openCheckinModal(null); });
   ge('qa-koneksi').addEventListener('click', function(){ openKoneksiModal(null); });
@@ -2514,8 +2613,15 @@ document.addEventListener('DOMContentLoaded', function(){
   ge('ev-type').addEventListener('change', onEventTypeChange);
   ge('btn-add-itin-day').addEventListener('click', addItinDay);
   ge('btn-save-event').addEventListener('click', saveEvent);
-  ge('btn-delete-event').addEventListener('click', async function(){ if(!currentEventId||!confirm('Hapus event ini?')) return; try{ await deleteDoc(doc(db,'events',currentEventId)); closeModal('modal-event-detail'); T('Event dihapus','success'); loadEventList(); }catch(e){ T('Gagal','error'); } });
-  ge('btn-edit-event').addEventListener('click', function(){ if(currentEventId&&currentEventData){ currentEventData._docId=currentEventId; openAddEventModal(currentEventData); } });
+  var btnDelEv2 = ge('btn-delete-event');
+  if(btnDelEv2) btnDelEv2.addEventListener('click', async function(){
+    if(!currentEventId||!confirm('Hapus event ini?')) return;
+    try{ await deleteDoc(doc(db,'events',currentEventId)); closeModal('modal-event-detail'); T('Event dihapus','success'); loadEventList(); }catch(e){ T('Gagal hapus','error'); }
+  });
+  var btnEditEv2 = ge('btn-edit-event');
+  if(btnEditEv2) btnEditEv2.addEventListener('click', function(){
+    if(currentEventId&&currentEventData){ currentEventData._docId=currentEventId; openAddEventModal(currentEventData); }
+  });
   // Self eval
   ge('btn-save-self-ayah').addEventListener('click', function(){ saveSelfEval('ayah'); });
   ge('btn-save-self-ibu').addEventListener('click', function(){ saveSelfEval('ibu'); });
@@ -3241,100 +3347,5 @@ function openShareModal() {
 
 
 </script>
-
-
-<div class="modal-overlay" id="modal-event">
-  <div class="modal">
-    <div class="modal-hdr"><div class="modal-title" id="modal-event-title">Tambah Event</div><div class="modal-close" data-close="modal-event">x</div></div>
-    <div class="fg"><label>Jenis Event</label><select id="ev-type"><option value="rekreasi">Rekreasi / Liburan</option><option value="pondok">Kunjungan ke Pondok</option><option value="les">Les / Kursus Anak</option><option value="kesehatan">Kesehatan / Dokter</option><option value="ulang-tahun">Ulang Tahun</option><option value="milestone">Milestone Penting</option><option value="sekolah">Pertemuan Sekolah</option><option value="custom">Event Lainnya (Custom)</option></select></div>
-    <div class="fg" id="ev-custom-name-wrap" style="display:none"><label>Nama Event</label><input type="text" id="ev-custom-name" placeholder="Nama event Anda..."></div>
-    <div class="fg"><label>Judul</label><input type="text" id="ev-title" placeholder="Contoh: Liburan ke Yogya"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="fg"><label>Tanggal Mulai</label><input type="date" id="ev-start"></div><div class="fg"><label>Tanggal Selesai</label><input type="date" id="ev-end"></div></div>
-    <div class="fg"><label>Peserta</label><div class="chip-group"><div class="chip" data-group="ev-peserta">Seluruh Keluarga</div><div class="chip" data-group="ev-peserta">Papa &amp; Fakhrur</div><div class="chip" data-group="ev-peserta">Papa &amp; Faqih</div><div class="chip" data-group="ev-peserta">Papa &amp; Fathan</div><div class="chip" data-group="ev-peserta">Papa &amp; Mama</div><div class="chip" data-group="ev-peserta">Semua Anak</div></div><input type="text" id="ev-peserta-custom" placeholder="Atau tulis peserta sendiri..." style="margin-top:8px"></div>
-    <div class="fg"><label>Status</label><select id="ev-status"><option value="rencana">Rencana</option><option value="dikonfirmasi">Dikonfirmasi</option><option value="selesai">Selesai</option><option value="dibatalkan">Dibatalkan</option></select></div>
-    <div class="fg"><label>Catatan</label><textarea id="ev-note" placeholder="Detail, hal yang perlu disiapkan..."></textarea></div>
-    <div class="fg"><label>Anggaran</label><input type="text" id="ev-budget" placeholder="Contoh: Rp 5.000.000"></div>
-    <div id="itinerary-section">
-      <div class="sec-label">Perencanaan Detail</div>
-
-      <!-- Field khusus per kategori -->
-      <div id="ev-category-fields"></div>
-
-      <!-- Default fields untuk semua kategori -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="fg">
-          <label>Transportasi</label>
-          <select id="ev-transport">
-            <option value="">-- Pilih --</option>
-            <option>Mobil Pribadi</option>
-            <option>Pesawat</option>
-            <option>Kereta</option>
-            <option>Bus</option>
-            <option>Kapal/Ferry</option>
-            <option>Ojek/Taksi Online</option>
-            <option>Jalan Kaki</option>
-            <option>Tidak Ada</option>
-          </select>
-        </div>
-        <div class="fg">
-          <label id="ev-hotel-label">Akomodasi / Lokasi</label>
-          <input type="text" id="ev-hotel" placeholder="Hotel, penginapan, atau lokasi tujuan">
-        </div>
-      </div>
-
-      <!-- CALENDAR RANGE PICKER -->
-      <div style="margin-bottom:14px">
-        <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Jadwal Per Hari</label>
-        <div id="itin-calendar-wrap" style="background:#fff;border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)">
-          <!-- Calendar Header -->
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--gold);color:#fff">
-            <button id="cal-prev" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;font-family:inherit">&#8249;</button>
-            <div id="cal-month-label" style="font-size:15px;font-weight:800;letter-spacing:.3px"></div>
-            <button id="cal-next" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;font-family:inherit">&#8250;</button>
-          </div>
-          <!-- Day labels -->
-          <div style="display:grid;grid-template-columns:repeat(7,1fr);background:var(--bg2);padding:6px 8px">
-            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--muted);padding:4px 0">Sen</div>
-            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--muted);padding:4px 0">Sel</div>
-            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--muted);padding:4px 0">Rab</div>
-            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--muted);padding:4px 0">Kam</div>
-            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--muted);padding:4px 0">Jum</div>
-            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--rose);padding:4px 0">Sab</div>
-            <div style="text-align:center;font-size:10px;font-weight:800;color:var(--rose);padding:4px 0">Min</div>
-          </div>
-          <!-- Calendar grid -->
-          <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);padding:8px;gap:2px"></div>
-          <!-- Range info -->
-          <div id="cal-range-info" style="padding:10px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);display:none">
-            <span id="cal-range-text"></span>
-            <span onclick="clearCalRange()" style="color:var(--rose);cursor:pointer;font-weight:700;margin-left:10px">Hapus Range</span>
-          </div>
-        </div>
-        <!-- Schedule list per day -->
-        <div id="itin-days-list" style="margin-top:12px"></div>
-      </div>
-
-      <div class="fg"><label>Tips & Catatan Penting</label><textarea id="ev-tips" placeholder="Tips, hal penting, yang perlu disiapkan..."></textarea></div>
-    </div>
-    <div class="modal-footer"><button class="btn btn-outline" data-close="modal-event">Batal</button><button class="btn btn-primary" id="btn-save-event">Simpan Event</button></div>
-  </div>
-</div>
-<div class="modal-overlay" id="modal-event-detail">
-  <div class="modal">
-    <div class="modal-hdr"><div class="modal-title" id="ev-detail-title">Detail Event</div><div class="modal-close" data-close="modal-event-detail">x</div></div>
-    <div id="ev-detail-content"></div>
-    <div class="modal-footer"><button class="btn btn-danger btn-sm" id="btn-delete-event">Hapus</button><button class="btn btn-primary btn-sm" id="btn-edit-event">Edit Event</button><button class="btn btn-outline" data-close="modal-event-detail">Tutup</button></div>
-  </div>
-</div>
-<div class="modal-overlay" id="modal-add-dim">
-  <div class="modal">
-    <div class="modal-hdr"><div class="modal-title" id="modal-add-dim-title">+ Tambah Dimensi</div><div class="modal-close" data-close="modal-add-dim">x</div></div>
-    <div class="fg"><label>Nama Dimensi</label><input type="text" id="new-dim-name" placeholder="Contoh: Imam Sholat Berjamaah"></div>
-    <div class="fg"><label>Deskripsi / Target</label><input type="text" id="new-dim-desc" placeholder="Contoh: Minimal 3x seminggu menjadi imam"></div>
-    <div class="fg"><label>Ikon (emoji)</label><input type="text" id="new-dim-icon" placeholder="Contoh: ketik emoji" maxlength="4"></div>
-    <div class="modal-footer"><button class="btn btn-outline" data-close="modal-add-dim">Batal</button><button class="btn btn-primary" id="btn-save-dim">Tambah Dimensi</button></div>
-  </div>
-</div>
-
 </body>
 </html>
