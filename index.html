@@ -1948,20 +1948,40 @@ function showEventDetail(docId, data) {
   currentEventId = docId; currentEventData = data;
   ge('ev-detail-title').textContent = data.title;
   const el = ge('ev-detail-content'); el.innerHTML='';
+
   const statusColor={rencana:'badge-gold',dikonfirmasi:'badge-teal',selesai:'badge-sky',dibatalkan:'badge-rose'};
-  let html = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">'
-    +'<span class="badge '+(statusColor[data.status]||'badge-sky')+'">'+data.status+'</span>'
-    +'<span class="badge badge-sky">'+data.typeLabel+'</span>'
-    +(data.budget?'<span class="badge badge-green">'+data.budget+'</span>':'')+'</div>';
-  if(data.startDate) html+='<div style="font-size:13px;margin-bottom:6px"><strong>Tanggal: </strong>'+data.startDate+(data.endDate&&data.endDate!==data.startDate?' - '+data.endDate:'')+'</div>';
-  if(data.peserta) html+='<div style="font-size:13px;margin-bottom:6px"><strong>Peserta: </strong>'+data.peserta+'</div>';
-  if(data.note) html+='<div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:14px;padding:12px;background:var(--bg);border-radius:var(--rx)">'+data.note+'</div>';
+  const statusLabel={rencana:'Rencana',dikonfirmasi:'Dikonfirmasi',selesai:'Selesai',dibatalkan:'Dibatalkan'};
+
+  // Status badges
+  const badgeRow=document.createElement('div'); badgeRow.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px';
+  const sb=document.createElement('span'); sb.className='badge '+(statusColor[data.status]||'badge-sky'); sb.textContent=statusLabel[data.status]||data.status; badgeRow.appendChild(sb);
+  const tb=document.createElement('span'); tb.className='badge badge-sky'; tb.textContent=data.typeLabel||data.type; badgeRow.appendChild(tb);
+  if(data.budget){ const bb=document.createElement('span'); bb.className='badge badge-green'; bb.textContent=data.budget; badgeRow.appendChild(bb); }
+  if(data.itinerary){ const ib=document.createElement('span'); ib.className='badge badge-purple'; ib.textContent='Ada Itinerary'; badgeRow.appendChild(ib); }
+  el.appendChild(badgeRow);
+
+  function addInfo(label, value, isBlock) {
+    if(!value) return;
+    const wrap=document.createElement('div'); wrap.style.marginBottom='8px';
+    if(isBlock){
+      const lbl=document.createElement('div'); lbl.style.cssText='font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px'; lbl.textContent=label; wrap.appendChild(lbl);
+      const val=document.createElement('div'); val.style.cssText='font-size:13px;color:var(--text);line-height:1.6;background:var(--bg);padding:10px;border-radius:var(--rx)'; val.textContent=value; wrap.appendChild(val);
+    } else {
+      wrap.innerHTML='<span style="font-size:13px;font-weight:700">'+label+': </span><span style="font-size:13px;color:var(--muted)">'+value+'</span>';
+    }
+    el.appendChild(wrap);
+  }
+
+  if(data.startDate) addInfo('Tanggal', data.startDate+(data.endDate&&data.endDate!==data.startDate?' - '+data.endDate:''), false);
+  if(data.peserta) addInfo('Peserta', data.peserta, false);
+  if(data.note){ const nd=document.createElement('div'); nd.style.cssText='font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:14px;padding:12px;background:var(--bg);border-radius:var(--rx)'; nd.textContent=data.note; el.appendChild(nd); }
+
   if(data.itinerary){
     const it=data.itinerary;
-    html+='<div style="font-size:14px;font-weight:800;margin-bottom:12px;padding-top:12px;border-top:1px solid var(--border)">Perencanaan Detail</div>';
+    const hdr=document.createElement('div'); hdr.style.cssText='font-size:14px;font-weight:800;margin-bottom:12px;padding-top:12px;border-top:1px solid var(--border)'; hdr.textContent='Perencanaan Detail'; el.appendChild(hdr);
 
     // Category-specific fields
-    const catLabels = {
+    const catLabels={
       'ev-destinasi':'Destinasi',
       'ev-tujuan-pondok':'Tujuan Kunjungan','ev-pesan-anak':'Pesan untuk Anak','ev-bawaan':'Barang Bawaan',
       'ev-pengajar':'Pengajar','ev-materi':'Materi','ev-biaya':'Biaya','ev-target-les':'Target Les',
@@ -1972,73 +1992,31 @@ function showEventDetail(docId, data) {
       'ev-detail-custom':'Detail Kegiatan','ev-target-custom':'Target'
     };
     if(it.categoryData){
-      Object.entries(it.categoryData).forEach(function(e){
-        if(e[1]){
-          const lbl=catLabels[e[0]]||e[0];
-          html+='<div style="margin-bottom:8px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">'+lbl+'</div>'
-            +'<div style="font-size:13px;color:var(--text);line-height:1.6;background:var(--bg);padding:10px;border-radius:var(--rx)">'+e[1].replace(/
-/g,'<br>')+'</div></div>';
-        }
+      Object.entries(it.categoryData).forEach(function(entry){
+        if(entry[1]) addInfo(catLabels[entry[0]]||entry[0], entry[1], true);
       });
     }
 
     // Default fields
-    if(it.transport&&it.transport!=='-- Pilih --') html+='<div style="margin-bottom:8px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Transportasi</div><div style="font-size:13px;background:var(--bg);padding:10px;border-radius:var(--rx)">'+it.transport+'</div></div>';
-    if(it.hotel) html+='<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Akomodasi / Lokasi</div><div style="font-size:13px;background:var(--bg);padding:10px;border-radius:var(--rx)">'+it.hotel+'</div></div>';
+    if(it.transport && it.transport!='-- Pilih --') addInfo('Transportasi', it.transport, true);
+    if(it.hotel) addInfo('Akomodasi / Lokasi', it.hotel, true);
 
     // Schedule
-    if(it.days&&it.days.length){
-      html+='<div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:8px">Jadwal Per Hari / Sesi</div>';
+    if(it.days && it.days.length){
+      const schedHdr=document.createElement('div'); schedHdr.style.cssText='font-size:12px;font-weight:800;color:var(--text);margin:12px 0 8px'; schedHdr.textContent='Jadwal Per Hari / Sesi'; el.appendChild(schedHdr);
       it.days.forEach(function(day){
-        html+='<div style="background:var(--bg);border-radius:var(--rx);padding:12px;margin-bottom:8px;border:1px solid var(--border)">'
-          +'<div style="font-size:12px;font-weight:800;color:var(--gold);margin-bottom:6px">Hari/Sesi '+day.day+(day.tanggal?' - '+day.tanggal:'')+'</div>';
-        if(day.aktivitas&&day.aktivitas.length) day.aktivitas.forEach(function(a){ if(a) html+='<div style="font-size:12px;padding:4px 0;border-bottom:1px solid var(--bg2)">'+a+'</div>'; });
-        if(day.catatan) html+='<div style="font-size:11px;color:var(--muted);margin-top:6px;font-style:italic">'+day.catatan+'</div>';
-        html+='</div>';
+        const dayDiv=document.createElement('div'); dayDiv.style.cssText='background:var(--bg);border-radius:var(--rx);padding:12px;margin-bottom:8px;border:1px solid var(--border)';
+        const dayHdr=document.createElement('div'); dayHdr.style.cssText='font-size:12px;font-weight:800;color:var(--gold);margin-bottom:6px'; dayHdr.textContent='Hari/Sesi '+day.day+(day.tanggal?' - '+day.tanggal:''); dayDiv.appendChild(dayHdr);
+        if(day.aktivitas&&day.aktivitas.length){ day.aktivitas.forEach(function(a){ if(a){ const ad=document.createElement('div'); ad.style.cssText='font-size:12px;padding:4px 0;border-bottom:1px solid var(--bg2)'; ad.textContent=a; dayDiv.appendChild(ad); } }); }
+        if(day.catatan){ const cd=document.createElement('div'); cd.style.cssText='font-size:11px;color:var(--muted);margin-top:6px;font-style:italic'; cd.textContent=day.catatan; dayDiv.appendChild(cd); }
+        el.appendChild(dayDiv);
       });
     }
-    if(it.tips) html+='<div style="font-size:13px;color:var(--muted);margin-top:8px;padding:12px;background:var(--gold-d);border-radius:var(--rx);border:1px solid var(--gold-b)"><strong>Tips & Catatan:</strong> '+it.tips+'</div>';
+    if(it.tips){ const tipDiv=document.createElement('div'); tipDiv.style.cssText='font-size:13px;color:var(--muted);margin-top:8px;padding:12px;background:var(--gold-d);border-radius:var(--rx);border:1px solid var(--gold-b)'; tipDiv.innerHTML='<strong>Tips & Catatan:</strong> '; tipDiv.appendChild(document.createTextNode(it.tips)); el.appendChild(tipDiv); }
   }
-  el.innerHTML = html;
   openModal('modal-event-detail');
 }
 
-// ===== SELF EVAL =====
-async function loadSelfDimsFromDB() {
-  if (!CU) return;
-  try {
-    const s = await getDoc(doc(db,'selfdims',CU.profile.familyCode));
-    if (s.exists()) { const d=s.data(); if(d.ayah) selfDims.ayah=d.ayah; if(d.ibu) selfDims.ibu=d.ibu; }
-  } catch(e) {}
-  renderSelfDims('ayah'); renderSelfDims('ibu');
-}
-
-async function saveSelfDimsDB() {
-  if (!CU) return;
-  try { await setDoc(doc(db,'selfdims',CU.profile.familyCode), selfDims); } catch(e) {}
-}
-
-function renderSelfDims(role) {
-  const el = ge('self-dims-' + role); if (!el) return; el.innerHTML='';
-  selfDims[role].forEach(function(dim) {
-    const val = selfRatings[role][dim.id] || 0;
-    const row = document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bg2)';
-    const info = document.createElement('div'); info.style.flex='1';
-    info.innerHTML='<div style="font-size:13px;font-weight:700">'+(dim.icon||'')+' '+dim.name+'</div>'+'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+dim.desc+'</div>';
-    const rw = document.createElement('div'); rw.style.cssText='display:flex;gap:4px;flex-shrink:0';
-    [{v:1,label:'Belum',col:'var(--rose)'},{v:2,label:'Sebagian',col:'var(--gold)'},{v:3,label:'Terpenuhi',col:'var(--teal)'}].forEach(function(opt){
-      const btn=document.createElement('div');
-      const isActive = val === opt.v;
-      btn.style.cssText='width:72px;height:28px;border-radius:8px;border:1.5px solid '+(isActive?opt.col:'var(--border)')+';cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;transition:all .15s;background:'+(isActive?opt.col:'transparent')+';color:'+(isActive?'#fff':opt.col);
-      btn.textContent=opt.label;
-      btn.addEventListener('click', function(){ selfRatings[role][dim.id]=opt.v; renderSelfDims(role); });
-      rw.appendChild(btn);
-    });
-    const del=document.createElement('span'); del.className='del-btn'; del.textContent='x';
-    del.addEventListener('click', async function(){ if(!confirm('Hapus dimensi ini?')) return; selfDims[role]=selfDims[role].filter(function(d){ return d.id!==dim.id; }); await saveSelfDimsDB(); renderSelfDims(role); });
-    row.appendChild(info); row.appendChild(rw); row.appendChild(del); el.appendChild(row);
-  });
-}
 window.renderSelfDims = renderSelfDims;
 
 async function saveSelfEval(role) {
