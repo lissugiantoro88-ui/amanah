@@ -2536,294 +2536,313 @@ function generateDaysFromRange() {
 // ========== PDF EXPORT ==========
 function exportEventPDF() {
   if (!currentEventData) return;
-  const data = currentEventData;
-  const it = data.itinerary || {};
+  var data = currentEventData;
+  var it = data.itinerary || {};
 
-  const { jsPDF } = window.jspdf;
-  if (!jsPDF) { T('jsPDF tidak tersedia', 'error'); return; }
+  if (!window.jspdf || !window.jspdf.jsPDF) { T('PDF library belum siap, coba lagi','error'); return; }
+  var doc = new window.jspdf.jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
 
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const pw = 210, ph = 297;
-  const ml = 18, mr = 18, mt = 20;
-  let y = mt;
+  var PW=210, PH=297, ML=15, MR=15, TW=210-15-15;
+  var GOLD=[184,134,11], GOLD_L=[252,248,235], GOLD_D=[230,195,100];
+  var DARK=[30,30,30], MUTED=[100,100,100], WHITE=[255,255,255];
+  var BLUE=[13,71,161], GREEN=[27,94,32], RED=[198,40,40];
+  var curY = 0;
 
-  // ── HELPERS ──
-  function setFont(style, size, color) {
-    doc.setFont('helvetica', style || 'normal');
-    doc.setFontSize(size || 11);
-    if (color) doc.setTextColor(color[0], color[1], color[2]);
-    else doc.setTextColor(40, 40, 40);
+  // ─── HELPERS ───────────────────────────────────────────────────────
+  function rgb(arr){ return arr; }
+  function setFont(style, size, col){
+    doc.setFont('helvetica', style||'normal');
+    doc.setFontSize(size||10);
+    doc.setTextColor.apply(doc, col||DARK);
   }
-  function drawRect(x, ry, w, h, r, fill) {
-    doc.setFillColor(fill[0], fill[1], fill[2]);
-    doc.roundedRect(x, ry, w, h, r, r, 'F');
+  function fillRect(x,y,w,h,col){
+    doc.setFillColor.apply(doc, col);
+    doc.rect(x,y,w,h,'F');
   }
-  function badge(text, bx, by, bgColor, textColor) {
-    setFont('bold', 8);
-    const tw = doc.getTextWidth(text);
-    const bw = tw + 8, bh = 5.5;
-    doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
-    doc.roundedRect(bx, by - 3.5, bw, bh, 1.5, 1.5, 'F');
-    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
-    doc.text(text, bx + 4, by);
-    return bw + 4;
+  function fillRoundRect(x,y,w,h,r,col){
+    doc.setFillColor.apply(doc, col);
+    doc.roundedRect(x,y,w,h,r,r,'F');
   }
-  function checkPage(needed) {
-    if (y + needed > ph - 20) {
-      doc.addPage();
-      y = mt;
-      drawHeader();
+  function strokeRoundRect(x,y,w,h,r,strokeCol,lw){
+    doc.setDrawColor.apply(doc, strokeCol||GOLD);
+    doc.setLineWidth(lw||0.3);
+    doc.roundedRect(x,y,w,h,r,r,'S');
+  }
+  function txt(text,x,y,opts){ doc.text(String(text||''),x,y,opts||{}); }
+  function needPage(h){
+    if(curY+h > PH-18){
+      doc.addPage(); curY=32; drawPageHeader();
     }
   }
-  function drawHeader() {
-    // Top gold strip
-    doc.setFillColor(184, 134, 11);
-    doc.rect(0, 0, pw, 10, 'F');
-    doc.setFillColor(245, 240, 225);
-    doc.rect(0, 10, pw, 8, 'F');
-    setFont('bold', 9, [184, 134, 11]);
-    doc.text('AMANAH — Dashboard Parenting Keluarga', ml, 15.5);
-    setFont('normal', 8, [120, 100, 60]);
-    const dateStr = new Date().toLocaleDateString('id-ID', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
-    doc.text(dateStr, pw - mr, 15.5, { align: 'right' });
+  function wrapText(text, maxW){
+    return doc.splitTextToSize(String(text||''), maxW);
   }
 
-  // ── PAGE 1 ──
-  // Header strip
-  doc.setFillColor(184, 134, 11);
-  doc.rect(0, 0, pw, 48, 'F');
+  // ─── PAGE HEADER (page 2+) ─────────────────────────────────────────
+  function drawPageHeader(){
+    fillRect(0,0,PW,8,GOLD);
+    fillRect(0,8,PW,7,[245,240,220]);
+    setFont('bold',8,[245,230,150]);
+    txt('AMANAH', ML, 5.5);
+    setFont('normal',7,MUTED);
+    txt('Dashboard Parenting Keluarga', ML+22, 5.5);
+    setFont('bold',8,GOLD);
+    var t = data.title||'';
+    txt(t.length>40?t.substring(0,38)+'...':t, PW-MR, 5.5, {align:'right'});
+    setFont('normal',7,MUTED);
+    txt(new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}), PW-MR, 12.5, {align:'right'});
+    curY = 20;
+  }
 
-  // Bismillah
-  setFont('bold', 10, [255, 248, 220]);
-  doc.text('بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم', pw / 2, 16, { align: 'center' });
+  // ─── PAGE 1 COVER HEADER ───────────────────────────────────────────
+  // Gold gradient header block
+  fillRect(0,0,PW,52,GOLD);
+  // Subtle pattern lines
+  doc.setDrawColor(200,160,30); doc.setLineWidth(0.15);
+  for(var li=0; li<PW; li+=8){ doc.line(li,0,li,52); }
 
-  // Type label
-  const typeIcons = {
-    rekreasi: 'REKREASI / LIBURAN', pondok: 'KUNJUNGAN PONDOK',
-    les: 'LES / KURSUS', kesehatan: 'KESEHATAN',
-    'ulang-tahun': 'ULANG TAHUN', milestone: 'MILESTONE',
-    sekolah: 'PERTEMUAN SEKOLAH', custom: 'EVENT'
+  // App name top-left
+  setFont('bold',9,[255,240,160]);
+  txt('AMANAH', ML, 8);
+  setFont('normal',7,[220,190,100]);
+  txt('Dashboard Parenting Islami & Madani', ML, 13);
+
+  // Date top-right
+  setFont('normal',7,[220,200,140]);
+  txt(new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'}), PW-MR, 8, {align:'right'});
+
+  // Divider line
+  doc.setDrawColor(255,220,80); doc.setLineWidth(0.5);
+  doc.line(ML, 17, PW-MR, 17);
+
+  // Event type badge
+  var typeNames = {rekreasi:'REKREASI & LIBURAN',pondok:'KUNJUNGAN PONDOK',les:'LES / KURSUS',
+    kesehatan:'KESEHATAN',['ulang-tahun']:'ULANG TAHUN',milestone:'MILESTONE',
+    sekolah:'PERTEMUAN SEKOLAH',custom:'EVENT KELUARGA'};
+  var typeName = typeNames[data.type]||'EVENT KELUARGA';
+  setFont('bold',7.5,[255,230,120]);
+  txt(typeName, PW/2, 23, {align:'center'});
+
+  // Event title - large
+  setFont('bold',18,WHITE);
+  var titleLines = wrapText(data.title||'Event', TW-10);
+  var titleY = 32;
+  titleLines.slice(0,2).forEach(function(line){ txt(line, PW/2, titleY, {align:'center'}); titleY+=9; });
+
+  // Bottom gold bar with bismillah
+  fillRect(0,44,PW,8,[150,110,5]);
+  setFont('italic',8,[255,240,180]);
+  txt('Bismillahirrahmanirrahim', PW/2, 49.5, {align:'center'});
+
+  curY = 60;
+
+  // ─── STATUS + META CARD ─────────────────────────────────────────────
+  fillRoundRect(ML, curY, TW, 26, 3, GOLD_L);
+  strokeRoundRect(ML, curY, TW, 26, 3, GOLD, 0.4);
+
+  // Status badge
+  var statusMap = {
+    rencana:   {label:'Rencana',    bg:[255,193,7],  tc:[60,40,0]},
+    dikonfirmasi:{label:'Dikonfirmasi',bg:[46,125,50],tc:WHITE},
+    selesai:   {label:'Selesai',    bg:[13,71,161],  tc:WHITE},
+    dibatalkan:{label:'Dibatalkan', bg:[198,40,40],  tc:WHITE}
   };
-  setFont('normal', 8, [255, 230, 150]);
-  doc.text(typeIcons[data.type] || 'EVENT', pw / 2, 24, { align: 'center' });
-
-  // Event title
-  setFont('bold', 20, [255, 255, 255]);
-  const titleLines = doc.splitTextToSize(data.title || '', pw - 40);
-  doc.text(titleLines, pw / 2, 33, { align: 'center' });
-
-  // Bottom of header accent line
-  doc.setFillColor(255, 210, 80);
-  doc.rect(ml, 44, pw - ml - mr, 0.8, 'F');
-
-  y = 58;
-
-  // ── BADGES ROW ──
-  const statusColors = {
-    rencana: [[255, 193, 7], [80, 60, 0]],
-    dikonfirmasi: [[46, 125, 50], [255, 255, 255]],
-    selesai: [[13, 71, 161], [255, 255, 255]],
-    dibatalkan: [[198, 40, 40], [255, 255, 255]]
-  };
-  const sc = statusColors[data.status] || [[100,100,100],[255,255,255]];
-  const statusLabel = {rencana:'Rencana',dikonfirmasi:'Dikonfirmasi',selesai:'Selesai',dibatalkan:'Dibatalkan'};
-  let bx = ml;
-  bx += badge(statusLabel[data.status] || data.status, bx, y, sc[0], sc[1]);
-  if (data.typeLabel) bx += badge(data.typeLabel, bx, y, [13,71,161], [255,255,255]);
-  if (data.budget) bx += badge(data.budget, bx, y, [27,94,32], [255,255,255]);
-  y += 10;
-
-  // ── INFO CARD ──
-  drawRect(ml, y, pw-ml-mr, 28, 3, [252, 248, 235]);
-  doc.setDrawColor(184, 134, 11);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(ml, y, pw-ml-mr, 28, 3, 3, 'S');
-
-  const col1x = ml + 6, col2x = pw/2 + 4;
-  let cy = y + 7;
-  setFont('bold', 8, [120, 100, 60]);
-  doc.text('TANGGAL', col1x, cy);
-  doc.text('PESERTA', col2x, cy);
-  cy += 5;
-  setFont('normal', 10, [30, 30, 30]);
-  const dateRange = data.startDate + (data.endDate && data.endDate !== data.startDate ? ' s.d. ' + data.endDate : '');
-  doc.text(dateRange || '-', col1x, cy);
-  doc.text(data.peserta || data.pesertaCustom || '-', col2x, cy);
-  cy += 5;
-  if (data.budget) {
-    setFont('bold', 8, [120, 100, 60]);
-    doc.text('ANGGARAN', col1x, cy);
-    cy += 4;
-    setFont('normal', 10, [30, 30, 30]);
-    doc.text(data.budget, col1x, cy);
+  var sm = statusMap[data.status]||{label:data.status||'',bg:MUTED,tc:WHITE};
+  var bx=ML+5, by=curY+6;
+  fillRoundRect(bx, by-3.5, 28, 6, 1.5, sm.bg);
+  setFont('bold', 7.5, sm.tc); txt(sm.label, bx+4, by);
+  bx+=32;
+  if(data.typeLabel){
+    fillRoundRect(bx, by-3.5, 32, 6, 1.5, BLUE);
+    setFont('bold',7.5,WHITE); txt(data.typeLabel.substring(0,18), bx+4, by);
+    bx+=36;
   }
-  y += 33;
-
-  // ── CATATAN ──
-  if (data.note) {
-    checkPage(20);
-    drawRect(ml, y, pw-ml-mr, 6, 2, [235, 245, 255]);
-    setFont('bold', 8, [13, 71, 161]);
-    doc.text('CATATAN', ml+5, y+4.5);
-    y += 9;
-    setFont('normal', 10, [40, 40, 40]);
-    const noteLines = doc.splitTextToSize(data.note, pw-ml-mr-4);
-    noteLines.forEach(function(line) {
-      checkPage(6);
-      doc.text(line, ml+2, y); y += 5.5;
-    });
-    y += 4;
+  if(data.budget){
+    fillRoundRect(bx, by-3.5, doc.getTextWidth(data.budget)+8, 6, 1.5, GREEN);
+    setFont('bold',7.5,WHITE); txt(data.budget, bx+4, by);
   }
 
-  // ── ITINERARY ──
-  if (it && (it.transport || it.hotel || (it.days && it.days.length) || it.categoryData)) {
-    checkPage(16);
-    // Section header
-    doc.setFillColor(60, 60, 60);
-    doc.rect(ml, y, pw-ml-mr, 8, 'F');
-    setFont('bold', 11, [255, 255, 255]);
-    doc.text('PERENCANAAN DETAIL', ml+5, y+5.5);
-    y += 12;
+  // Date + Peserta + Budget row
+  var infoY = curY+17;
+  setFont('bold',7.5,GOLD);   txt('TANGGAL',     ML+5, infoY);
+  setFont('bold',7.5,GOLD);   txt('PESERTA',      ML+70, infoY);
+  if(data.budget){
+    setFont('bold',7.5,GOLD); txt('ANGGARAN',     ML+130, infoY);
+  }
+  infoY+=4.5;
+  var dateRange = (data.startDate||'')+(data.endDate&&data.endDate!==data.startDate?' s.d. '+data.endDate:'');
+  setFont('normal',9,DARK); txt(dateRange||'-', ML+5, infoY);
+  setFont('normal',9,DARK); txt((data.peserta||data.pesertaCustom||'-').substring(0,22), ML+70, infoY);
+  if(data.budget){ setFont('normal',9,DARK); txt(data.budget, ML+130, infoY); }
+  curY+=34;
 
-    // Category-specific fields
-    const catLabels = {
+  // ─── SECTION HELPER ────────────────────────────────────────────────
+  function sectionHeader(title, col){
+    needPage(14);
+    fillRoundRect(ML, curY, TW, 8, 2, col||[50,50,50]);
+    setFont('bold',9.5,WHITE);
+    txt(title, ML+6, curY+5.5);
+    curY+=12;
+  }
+  function field(label, value){
+    if(!value||!String(value).trim()) return;
+    needPage(14);
+    setFont('bold',7,MUTED);
+    txt(label.toUpperCase(), ML, curY);
+    curY+=4.5;
+    var lines = wrapText(value, TW-4);
+    var bh = lines.length*5+5;
+    fillRoundRect(ML, curY, TW, bh, 2, [250,250,250]);
+    strokeRoundRect(ML, curY, TW, bh, 2, [200,200,200], 0.2);
+    setFont('normal',9.5,DARK);
+    lines.forEach(function(l){ txt(l, ML+4, curY+4.5); curY+=5; });
+    curY+=8;
+  }
+  function fieldHalf(label1,val1,label2,val2){
+    if(!val1&&!val2) return;
+    needPage(18);
+    var hw=(TW-4)/2;
+    if(val1){
+      setFont('bold',7,MUTED); txt(label1.toUpperCase(), ML, curY);
+      fillRoundRect(ML, curY+3, hw, 10, 2, [250,250,250]);
+      strokeRoundRect(ML, curY+3, hw, 10, 2, [200,200,200], 0.2);
+      setFont('normal',9.5,DARK); txt(String(val1).substring(0,22), ML+4, curY+9.5);
+    }
+    if(val2){
+      setFont('bold',7,MUTED); txt(label2.toUpperCase(), ML+hw+4, curY);
+      fillRoundRect(ML+hw+4, curY+3, hw, 10, 2, [250,250,250]);
+      strokeRoundRect(ML+hw+4, curY+3, hw, 10, 2, [200,200,200], 0.2);
+      setFont('normal',9.5,DARK); txt(String(val2).substring(0,22), ML+hw+8, curY+9.5);
+    }
+    curY+=18;
+  }
+
+  // ─── CATATAN ────────────────────────────────────────────────────────
+  if(data.note){
+    needPage(20);
+    fillRoundRect(ML, curY, TW, 8, 2, [235,245,255]);
+    strokeRoundRect(ML, curY, TW, 8, 2, BLUE, 0.3);
+    setFont('bold',8,BLUE); txt('CATATAN UMUM', ML+5, curY+5.3);
+    curY+=11;
+    var noteLines = wrapText(data.note, TW-4);
+    setFont('normal',9.5,DARK);
+    noteLines.forEach(function(l){ needPage(6); txt(l, ML+2, curY); curY+=5.3; });
+    curY+=6;
+  }
+
+  // ─── ITINERARY ──────────────────────────────────────────────────────
+  if(it){
+    var catLabels={
       'ev-destinasi':'Destinasi',
       'ev-tujuan-pondok':'Tujuan Kunjungan','ev-pesan-anak':'Pesan untuk Anak','ev-bawaan':'Barang Bawaan',
-      'ev-pengajar':'Pengajar','ev-materi':'Materi','ev-biaya':'Biaya','ev-target-les':'Target Les',
-      'ev-dokter':'Dokter / RS','ev-keluhan':'Keluhan','ev-hasil':'Hasil Pemeriksaan','ev-tindak-lanjut':'Tindak Lanjut',
-      'ev-konsep':'Konsep Acara','ev-tamu':'Tamu Undangan','ev-rundown':'Rundown','ev-persiapan':'Persiapan',
+      'ev-pengajar':'Pengajar/Instruktur','ev-materi':'Materi','ev-biaya':'Biaya Les','ev-target-les':'Target Les',
+      'ev-dokter':'Dokter/RS','ev-keluhan':'Keluhan','ev-hasil':'Hasil Pemeriksaan','ev-tindak-lanjut':'Tindak Lanjut',
+      'ev-konsep':'Konsep Acara','ev-tamu':'Tamu Undangan','ev-rundown':'Rundown Acara','ev-persiapan':'Persiapan',
       'ev-deskripsi-milestone':'Deskripsi Milestone','ev-persiapan-ms':'Persiapan','ev-dokumentasi':'Dokumentasi',
-      'ev-agenda':'Agenda','ev-hasil-sekolah':'Hasil Pertemuan','ev-keputusan':'Keputusan',
+      'ev-agenda':'Agenda Pertemuan','ev-hasil-sekolah':'Hasil Pertemuan','ev-keputusan':'Keputusan',
       'ev-detail-custom':'Detail Kegiatan','ev-target-custom':'Target'
     };
 
-    function drawField(label, value) {
-      if (!value) return;
-      const valLines = doc.splitTextToSize(value, pw-ml-mr-6);
-      const boxH = 6 + valLines.length * 5.2;
-      checkPage(boxH + 4);
-      setFont('bold', 7.5, [100, 80, 20]);
-      doc.text(label.toUpperCase(), ml, y);
-      y += 4.5;
-      drawRect(ml, y, pw-ml-mr, valLines.length*5.2+3, 2, [252, 248, 235]);
-      setFont('normal', 10, [30, 30, 30]);
-      valLines.forEach(function(line) { doc.text(line, ml+3, y+4); y += 5.2; });
-      y += 5;
-    }
+    var hasCatData = it.categoryData && Object.values(it.categoryData).some(function(v){return v;});
+    var hasDefault = (it.transport&&it.transport!='-- Pilih --') || it.hotel;
+    var hasDays = it.days && it.days.length > 0;
+    var hasTips = !!it.tips;
 
-    // Category fields
-    if (it.categoryData) {
-      Object.entries(it.categoryData).forEach(function(e) {
-        if (e[1]) drawField(catLabels[e[0]] || e[0], e[1]);
-      });
-    }
+    if(hasCatData||hasDefault||hasDays||hasTips){
+      sectionHeader('PERENCANAAN DETAIL', [40,40,40]);
 
-    // Transport + Hotel side by side
-    if (it.transport || it.hotel) {
-      checkPage(18);
-      const halfW = (pw-ml-mr-4)/2;
-      if (it.transport && it.transport !== '-- Pilih --') {
-        setFont('bold', 7.5, [100, 80, 20]);
-        doc.text('TRANSPORTASI', ml, y);
-        drawRect(ml, y+2, halfW, 10, 2, [252, 248, 235]);
-        setFont('normal', 10, [30, 30, 30]);
-        doc.text(it.transport, ml+3, y+8);
+      // Category-specific fields
+      if(hasCatData){
+        Object.entries(it.categoryData).forEach(function(e){
+          if(e[1]) field(catLabels[e[0]]||e[0], e[1]);
+        });
       }
-      if (it.hotel) {
-        setFont('bold', 7.5, [100, 80, 20]);
-        doc.text('AKOMODASI / LOKASI', ml+halfW+4, y);
-        drawRect(ml+halfW+4, y+2, halfW, 10, 2, [252, 248, 235]);
-        setFont('normal', 10, [30, 30, 30]);
-        doc.text(doc.splitTextToSize(it.hotel, halfW-4)[0], ml+halfW+7, y+8);
-      }
-      y += 18;
-    }
 
-    // Schedule days
-    if (it.days && it.days.length) {
-      checkPage(16);
-      doc.setFillColor(60, 60, 60);
-      doc.rect(ml, y, pw-ml-mr, 7, 'F');
-      setFont('bold', 10, [255, 255, 255]);
-      doc.text('JADWAL KEGIATAN', ml+5, y+5);
-      y += 11;
+      // Transport + Hotel
+      var transport = (it.transport&&it.transport!='-- Pilih --') ? it.transport : '';
+      fieldHalf('Transportasi', transport, 'Akomodasi / Lokasi', it.hotel||'');
 
-      it.days.forEach(function(day, idx) {
-        const activitiesH = (day.aktivitas && day.aktivitas.length) ? day.aktivitas.length * 5.5 : 0;
-        const dayH = 14 + activitiesH + (day.catatan ? 8 : 0);
-        checkPage(dayH + 6);
+      // Schedule
+      if(hasDays){
+        needPage(18);
+        sectionHeader('JADWAL KEGIATAN', GOLD);
 
-        // Day header - gold
-        doc.setFillColor(184, 134, 11);
-        doc.rect(ml, y, pw-ml-mr, 8, 'F');
-        setFont('bold', 9, [255, 255, 255]);
-        const dayLabel = 'Hari ' + day.day + (day.tanggalLabel ? '  —  ' + day.tanggalLabel : day.tanggal ? '  —  ' + day.tanggal : '');
-        doc.text(dayLabel, ml+5, y+5.5);
-        y += 10;
+        it.days.forEach(function(day){
+          var nAkt = day.aktivitas ? day.aktivitas.filter(function(a){return a;}).length : 0;
+          var dayH = 14 + nAkt*6 + (day.catatan?8:0);
+          needPage(dayH+6);
 
-        // Activities
-        if (day.aktivitas && day.aktivitas.length) {
-          day.aktivitas.forEach(function(akt) {
-            if (!akt) return;
-            checkPage(7);
-            // Bullet
-            doc.setFillColor(184, 134, 11);
-            doc.circle(ml+3, y-0.5, 1, 'F');
-            setFont('normal', 9.5, [30, 30, 30]);
-            const aktLines = doc.splitTextToSize(akt, pw-ml-mr-10);
-            aktLines.forEach(function(al, i) {
-              doc.text(al, ml+7, y + (i*5));
+          // Day header
+          fillRoundRect(ML, curY, TW, 8.5, 2, GOLD);
+          setFont('bold',9.5,WHITE);
+          var dayLbl = 'Hari ' + day.day;
+          if(day.tanggalLabel) dayLbl += '   —   ' + day.tanggalLabel;
+          else if(day.tanggal) dayLbl += '   —   ' + day.tanggal;
+          txt(dayLbl, ML+5, curY+5.8);
+          curY+=10.5;
+
+          // Activity items
+          if(day.aktivitas&&day.aktivitas.length){
+            day.aktivitas.forEach(function(akt){
+              if(!akt) return;
+              needPage(7);
+              // Gold bullet
+              doc.setFillColor.apply(doc, GOLD);
+              doc.circle(ML+4, curY-0.5, 1, 'F');
+              setFont('normal',9.5,DARK);
+              var aktLines = wrapText(akt, TW-12);
+              aktLines.forEach(function(al,i){
+                txt(al, ML+8, curY+(i===0?0:i*5));
+              });
+              curY += Math.max(6, aktLines.length*5);
             });
-            y += aktLines.length * 5 + 1;
-          });
-        }
+          } else {
+            setFont('italic',8.5,MUTED);
+            txt('Belum ada aktivitas ditambahkan', ML+5, curY);
+            curY+=6;
+          }
 
-        // Day note
-        if (day.catatan) {
-          checkPage(10);
-          y += 2;
-          drawRect(ml+2, y, pw-ml-mr-4, 7, 1.5, [245, 245, 245]);
-          setFont('italic', 8.5, [100, 100, 100]);
-          doc.text('Catatan: ' + day.catatan, ml+5, y+4.5);
-          y += 10;
-        }
-        y += 4;
-      });
-    }
+          // Day note
+          if(day.catatan){
+            needPage(10);
+            curY+=2;
+            fillRoundRect(ML+2, curY, TW-4, 8, 1.5, [245,245,245]);
+            setFont('italic',8.5,MUTED);
+            txt('Catatan: '+String(day.catatan).substring(0,80), ML+6, curY+5.2);
+            curY+=11;
+          }
+          curY+=5;
+        });
+      }
 
-    // Tips
-    if (it.tips) {
-      checkPage(18);
-      doc.setFillColor(255, 248, 210);
-      doc.setDrawColor(184, 134, 11);
-      doc.setLineWidth(0.3);
-      doc.roundedRect(ml, y, pw-ml-mr, 12, 2, 2, 'FD');
-      setFont('bold', 8, [130, 90, 0]);
-      doc.text('TIPS & CATATAN PENTING', ml+5, y+5);
-      setFont('normal', 9, [80, 60, 0]);
-      const tipLines = doc.splitTextToSize(it.tips, pw-ml-mr-8);
-      doc.text(tipLines[0] || '', ml+5, y+9.5);
-      y += 14;
+      // Tips
+      if(hasTips){
+        needPage(20);
+        fillRoundRect(ML, curY, TW, 10, 2, [255,248,210]);
+        strokeRoundRect(ML, curY, TW, 10, 2, GOLD, 0.4);
+        setFont('bold',7.5,GOLD); txt('TIPS & CATATAN PENTING', ML+5, curY+4.5);
+        setFont('normal',8.5,[80,60,0]);
+        var tipLines = wrapText(it.tips, TW-10);
+        txt(tipLines[0]||'', ML+5, curY+8.5);
+        curY+=13;
+      }
     }
   }
 
-  // ── FOOTER on each page ──
-  const totalPages = doc.getNumberOfPages();
-  for (let pg = 1; pg <= totalPages; pg++) {
+  // ─── FOOTER on every page ──────────────────────────────────────────
+  var totalPages = doc.getNumberOfPages();
+  for(var pg=1; pg<=totalPages; pg++){
     doc.setPage(pg);
-    // Bottom line
-    doc.setDrawColor(184, 134, 11);
-    doc.setLineWidth(0.5);
-    doc.line(ml, ph-12, pw-mr, ph-12);
-    setFont('normal', 7.5, [150, 120, 60]);
-    doc.text('Amanah — Dashboard Parenting Islami & Madani', ml, ph-8);
-    doc.text('Halaman ' + pg + ' / ' + totalPages, pw-mr, ph-8, { align: 'right' });
-    if (pg > 1) drawHeader();
+    doc.setDrawColor.apply(doc, GOLD); doc.setLineWidth(0.4);
+    doc.line(ML, PH-13, PW-MR, PH-13);
+    fillRect(0, PH-12, PW, 12, [252,248,235]);
+    setFont('bold',7.5,GOLD); txt('AMANAH', ML, PH-6.5);
+    setFont('normal',7,MUTED); txt('Dashboard Parenting Islami & Madani', ML+18, PH-6.5);
+    setFont('normal',7,MUTED); txt('Halaman '+pg+' dari '+totalPages, PW-MR, PH-6.5, {align:'right'});
   }
 
-  // ── SAVE ──
-  const filename = 'Amanah_Event_' + (data.title||'event').replace(/[^a-zA-Z0-9]/g,'_') + '.pdf';
-  doc.save(filename);
+  var fn = 'Amanah_'+String(data.title||'event').replace(/[^a-zA-Z0-9 ]/g,'').replace(/ +/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.pdf';
+  doc.save(fn);
   T('PDF berhasil diunduh!', 'success');
 }
 
@@ -2897,11 +2916,11 @@ function getWeekLabel(){
   sg('qa-koneksi').addEventListener('click', function(){ openKoneksiModal(null); });
   sg('qa-musyawarah').addEventListener('click', function(){
     if (window._isParent === false) { T('Fitur ini hanya untuk Papa & Mama','error'); return; }
-    showPasg('tim');
+    showPage('tim');
   });
-  sg('qa-laporan').addEventListener('click', function(){ showPasg('laporan'); });
+  sg('qa-laporan').addEventListener('click', function(){ showPage('laporan'); });
   // Child page buttons
-  sg('btn-back-home').addEventListener('click', function(){ showPasg('home'); });
+  sg('btn-back-home').addEventListener('click', function(){ showPage('home'); });
   sg('btn-checkin-child').addEventListener('click', function(){ openCheckinModal(CK); });
   sg('btn-koneksi-child').addEventListener('click', function(){ openKoneksiModal(CK); });
   sg('btn-edit-child').addEventListener('click', openEditChildModal);
